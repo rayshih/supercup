@@ -14,7 +14,7 @@ module.exports = {
   },
   resolve: {
     modulesDirectories: ['node_modules', 'bower_components'],
-    extensions: ['', '.webpack.js', '.web.js', '.js', '.js.coffee', '.coffee']
+    extensions: ['', '.js', '.js.coffee', '.coffee']
   },
   plugins: [
     new webpack.ResolverPlugin(

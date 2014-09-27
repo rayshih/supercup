@@ -17,3 +17,4 @@
 
 *.swp
 /node_modules/*
+app/assets/javascripts/main.bundle.js
