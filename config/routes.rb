@@ -1,6 +1,9 @@
 Rails.application.routes.draw do
   root to: 'welcome#home'
 
-  resources 'tasks'
+  scope "/api" do
+    resources 'tasks'
+  end
+
   get '*other', to: 'welcome#home'
 end

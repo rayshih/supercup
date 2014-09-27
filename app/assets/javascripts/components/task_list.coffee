@@ -1,17 +1,24 @@
 {div, thead, tbody, tr, th, td} = React.DOM
 {Table, Input} = require 'react-bootstrap'
+Reflux = require 'reflux'
+TaskAction = require '../actions/tasks'
+taskStore = require '../stores/tasks'
 
 TaskList = React.createClass
   displayName: 'TaskList'
+  mixins: [Reflux.ListenerMixin]
 
   getInitialState: ->
     currentNewTaskName: ''
-    data : [
-      {name: 'test1'}
-      {name: 'test2'}
-      {name: 'test3'}
-      {name: 'test4'}
-    ]
+    data : []
+
+  componentDidMount: ->
+    @listenTo taskStore, @onStoreChange
+
+  onStoreChange: (data) ->
+    @setState
+      currentNewTaskName: @state.currentNewTaskName
+      data: data
 
   handleInputChange: (e) ->
     @setState
@@ -21,14 +28,12 @@ TaskList = React.createClass
   handleInputKeyPress: (e) ->
     return if e.key isnt "Enter"
 
-    input = @refs.input
-    newTaskName = input.getValue()
-    data = @state.data
+    newTaskName = @refs.input.getValue()
+    TaskAction.create name: newTaskName
 
-    data.push name: newTaskName
     @setState
       currentNewTaskName: ''
-      data: data
+      data: @state.data
 
   render: ->
     listItems = @state.data.map (task, i) ->
