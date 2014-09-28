@@ -1,5 +1,5 @@
 {div, thead, tbody, th, tr, td} = React.DOM
-{Table} = require 'react-bootstrap'
+{Table, Button} = require 'react-bootstrap'
 Reflux = require 'reflux'
 TaskAction = require '../actions/tasks'
 taskStore = require '../stores/tasks'
@@ -14,10 +14,11 @@ OrderedTaskListTable = React.createClass
         tr {},
           th {className: 'col-md-1'}, '#'
           th {className: 'col-md-6'}, 'Name'
-          th {className: 'col-md-3'}, 'Dependencies'
+          th {className: 'col-md-2'}, 'Dependencies'
           th {className: 'col-md-1'}, 'Milestone'
           th {className: 'col-md-1'}, 'Rank'
           th {className: 'col-md-1'}, 'Priority'
+          th {className: 'col-md-1'}, 'Actions'
       tbody {}, @props.items
 
 OrderedTaskListItem = React.createClass
@@ -27,6 +28,9 @@ OrderedTaskListItem = React.createClass
     task = @props.task
     task.setName name
     TaskAction.update task
+
+  handleHideButtonClick: ->
+    @props.onHideButtonClick @props.task.id
 
   render: ->
     task = @props.task
@@ -38,6 +42,8 @@ OrderedTaskListItem = React.createClass
       td {}, @props.milestone
       td {}, @props.rank
       td {}, task.getPriority()
+      td {},
+        Button {bsSize: 'xsmall', onClick: @handleHideButtonClick}, 'hide'
 
 OrderedTaskList = React.createClass
   displayName: 'OrderedTaskList'
@@ -54,15 +60,27 @@ OrderedTaskList = React.createClass
     sorter = new Sorter data
     sorter.sort()
     @setState
+      hidden: []
       data: sorter.result
       rank: sorter.depth
       milestone: sorter.milestone
 
+  handleHideButtonClick: (id) ->
+    state = @state
+    state.hidden.push id
+    @setState state
+
   render: ->
-    listItems = @state.data.map (task) =>
+    listItems = @state.data.filter((task) =>
+      @state.hidden.indexOf(task.id) == -1
+    ).map (task) =>
       rank = @state.rank[task.id]
       milestone = @state.milestone[task.id]
-      OrderedTaskListItem {key: task.id, task, rank, milestone}
+      OrderedTaskListItem {
+        key: task.id,
+        onHideButtonClick: @handleHideButtonClick,
+        task, rank, milestone
+      }
 
     OrderedTaskListTable {items: listItems}
 
