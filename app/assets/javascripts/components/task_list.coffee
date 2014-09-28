@@ -1,5 +1,5 @@
 {div, thead, tbody, tr, th, td, span} = React.DOM
-{Table, Input, Button} = require 'react-bootstrap'
+{Table, Button} = require 'react-bootstrap'
 Reflux = require 'reflux'
 TaskAction = require '../actions/tasks'
 taskStore = require '../stores/tasks'
@@ -10,9 +10,14 @@ TaskListItem = React.createClass
   handleDeleteButtonClick: ->
     TaskAction.destroy @props.task.id
 
-  handleChange: (name) ->
+  handleNameChange: (name) ->
     task = @props.task
-    task.name = name
+    task.setName name
+    TaskAction.update task
+
+  handleDependenciesChange: (dStr) ->
+    task = @props.task
+    task.setDependenciesString dStr
     TaskAction.update task
 
   render: ->
@@ -20,7 +25,11 @@ TaskListItem = React.createClass
 
     tr {key: @props.key},
         td {}, task.id
-        td {}, ClickToEditText({onChange: @handleChange}, task.name)
+        td {}, ClickToEditText({onChange: @handleNameChange}, task.getName())
+        td {}, ClickToEditText
+          onChange: @handleDependenciesChange, 
+          defaultValue: '(empty)'
+          task.getDependenciesString()
         td {},
           Button {bsStyle: 'danger', bsSize: 'xsmall', onClick: @handleDeleteButtonClick},
             'Delete'
@@ -34,7 +43,6 @@ TaskList = React.createClass
 
   componentDidMount: ->
     @listenTo taskStore, @onStoreChange
-
     TaskAction.index()
 
   onStoreChange: (data) ->
@@ -54,6 +62,7 @@ TaskList = React.createClass
           tr {},
             th {}, '#'
             th {}, 'Name'
+            th {}, 'Dependencies'
             th {}, 'Actions'
         tbody {}, listItems
       EnterToInputText

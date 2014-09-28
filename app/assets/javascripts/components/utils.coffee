@@ -43,30 +43,31 @@ EnterToInputText = React.createClass
 ClickToEditText = React.createClass
   displayName: 'ClickToEditText'
 
+  valueForDisplay: (s) ->
+    if s and s.length > 0
+      s
+    else
+      @props.defaultValue
+
   getInitialState: ->
     editMode: false
-    current: @props.children
 
   handleClick: ->
-    @setState
-      editMode: true
-      current: @props.children
+    @setState editMode: true
 
   onInputChange: (text) ->
-    current = text
-    @props.onChange current
-    @setState
-      editMode: false
-      current: current
+    @props.onChange text
+    @setState editMode: false
 
   render: ->
     if @state.editMode
       EnterToInputText
-        value: @state.current
+        value: @props.children
         inputOnBlur: true
         onChange: @onInputChange
     else
-      span {onClick: @handleClick}, @state.current
+      span {onClick: @handleClick},
+        @valueForDisplay @props.children
 
 module.exports = {
   NavItem

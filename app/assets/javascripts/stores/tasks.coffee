@@ -1,6 +1,7 @@
 _ = require 'lodash'
 Reflux = require 'reflux'
 action = require '../actions/tasks'
+Task = require '../models/task'
 
 module.exports = Reflux.createStore
   init: ->
@@ -12,9 +13,12 @@ module.exports = Reflux.createStore
     @listenTo action.update, @update
     @listenTo action.destroy, @destroy
 
+  parse: (data) ->
+    data.map (item) -> new Task(item)
+
   index: ->
     $.getJSON '/api/tasks', (data) =>
-      @data = data
+      @data = @parse data
       @trigger @data
 
   create: (task) ->
@@ -25,7 +29,7 @@ module.exports = Reflux.createStore
       data:
         task: task
     ).done (task) =>
-      @data.push task
+      @data.push new Task(task)
       @trigger @data
 
   update: (task) ->
@@ -34,11 +38,11 @@ module.exports = Reflux.createStore
       dataType: 'json'
       url: "/api/tasks/#{task.id}"
       data:
-        task: task
+        task: task.data
     ).done (task) =>
       @data = _.filter @data, (t) ->
         t.id != task.id
-      @data.push task
+      @data.push new Task(task)
       @trigger @data
 
   destroy: (id) ->
