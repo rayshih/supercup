@@ -4,7 +4,20 @@ Reflux = require 'reflux'
 TaskAction = require '../actions/tasks'
 taskStore = require '../stores/tasks'
 {EnterToInputText, ClickToEditText} = require '../components/utils'
-TaskListTable = require './task_list_table'
+
+TaskListTable = React.createClass
+  displayName: 'TaskListTable'
+  render: ->
+    Table {},
+      thead {},
+        tr {},
+          th {className: 'col-md-1'}, '#'
+          th {className: 'col-md-6'}, 'Name'
+          th {className: 'col-md-2'}, 'Dependencies'
+          th {className: 'col-md-1'}, 'Milestone'
+          th {className: 'col-md-1'}, 'Priority'
+          th {className: 'col-md-1'}, 'Actions'
+      tbody {}, @props.items
 
 TaskListItem = React.createClass
   displayName: 'TaskListItem'
@@ -12,6 +25,24 @@ TaskListItem = React.createClass
   handleNameChange: (name) ->
     task = @props.task
     task.setName name
+    TaskAction.update task
+
+  handleMilestoneChange: (mStr) ->
+    task = @props.task
+    milestone = parseInt(mStr, 10)
+    if isNaN(milestone)
+      task.setMilestone null
+    else
+      task.setMilestone milestone
+    TaskAction.update task
+
+  handlePriorityChange: (pStr) ->
+    task = @props.task
+    priority = parseInt(pStr, 10)
+    if isNaN(priority)
+      task.setPriority null
+    else
+      task.setPriority priority
     TaskAction.update task
 
   handleDependenciesChange: (dStr) ->
@@ -28,11 +59,21 @@ TaskListItem = React.createClass
     tr {key: @props.key},
       td {}, task.id
       td {}, ClickToEditText({onChange: @handleNameChange}, task.getName())
-      td {}, ClickToEditText
+      td {}, ClickToEditText {
         enableEmpty: true
-        onChange: @handleDependenciesChange,
+        onChange: @handleDependenciesChange
         defaultValue: '(empty)'
-        task.getDependenciesString()
+      }, task.getDependenciesString()
+      td {}, ClickToEditText {
+        enableEmpty: true
+        onChange: @handleMilestoneChange
+        defaultValue: '(empty)'
+      }, task.getMilestone()?.toString()
+      td {}, ClickToEditText {
+        enableEmpty: true
+        onChange: @handlePriorityChange
+        defaultValue: '(empty)'
+      }, task.getPriority()?.toString()
       td {},
         Button {bsStyle: 'danger', bsSize: 'xsmall', onClick: @handleDeleteButtonClick},
           'Delete'
@@ -60,10 +101,10 @@ TaskList = React.createClass
       TaskListItem {key: task.id, task: task}
 
     div {},
-      TaskListTable {items: listItems}
       EnterToInputText
         onChange: @onInputChange
         value: @state.currentNewTaskName
+      TaskListTable {items: listItems}
 
 module.exports = TaskList
 

@@ -11,11 +11,11 @@ EnterToInputText = React.createClass
   displayName: 'EnterToInputText'
 
   getInitialState: ->
-    current: @props.value
+    current: @props.value or ''
 
   handleInputChange: (e) ->
     @setState
-      current: @refs.input.getValue()
+      current: @refs.input.getValue() or ''
 
   handleInputKeyPress: (e) ->
     return if e.key isnt "Enter"

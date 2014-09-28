@@ -5,6 +5,14 @@ class Task
   getName: -> @data.name
   setName: (name) -> @data.name = name
 
+  getMilestone: -> @data.milestone
+  setMilestone: (milestone) -> @data.milestone = milestone
+
+  getPriority: -> @data.priority
+  setPriority: (priority) -> @data.priority = priority
+
+  getDependencies: -> @data.dependencies or []
+
   setDependenciesString: (str) ->
     @data.dependencies = str.split(',').map((s) ->
       parseInt s.trim(), 10

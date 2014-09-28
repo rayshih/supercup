@@ -20,6 +20,7 @@ module.exports = Reflux.createStore
   reorder: ->
     @data = _.chain(@data).
     sortBy('id').
+    reverse().
     value()
 
   index: ->
