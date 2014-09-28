@@ -41,7 +41,9 @@ class TasksController < ApplicationController
   # PATCH/PUT /tasks/1.json
   def update
     respond_to do |format|
-      if @task.update(task_params)
+      tp = task_params
+      tp[:dependencies] = [] unless tp[:dependencies]
+      if @task.update(tp)
         format.html { redirect_to @task, notice: 'Task was successfully updated.' }
         format.json { render :show, status: :ok, location: @task }
       else

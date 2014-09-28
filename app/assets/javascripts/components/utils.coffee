@@ -56,7 +56,10 @@ ClickToEditText = React.createClass
     @setState editMode: true
 
   onInputChange: (text) ->
-    @props.onChange text
+    text = text.trim()
+    unless text.length == 0 and !@props.enableEmpty
+      @props.onChange text
+
     @setState editMode: false
 
   render: ->

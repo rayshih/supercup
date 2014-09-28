@@ -24,15 +24,16 @@ TaskListItem = React.createClass
     task = @props.task
 
     tr {key: @props.key},
-        td {}, task.id
-        td {}, ClickToEditText({onChange: @handleNameChange}, task.getName())
-        td {}, ClickToEditText
-          onChange: @handleDependenciesChange, 
-          defaultValue: '(empty)'
-          task.getDependenciesString()
-        td {},
-          Button {bsStyle: 'danger', bsSize: 'xsmall', onClick: @handleDeleteButtonClick},
-            'Delete'
+      td {}, task.id
+      td {}, ClickToEditText({onChange: @handleNameChange}, task.getName())
+      td {}, ClickToEditText
+        enableEmpty: true
+        onChange: @handleDependenciesChange,
+        defaultValue: '(empty)'
+        task.getDependenciesString()
+      td {},
+        Button {bsStyle: 'danger', bsSize: 'xsmall', onClick: @handleDeleteButtonClick},
+          'Delete'
 
 TaskList = React.createClass
   displayName: 'TaskList'
@@ -60,10 +61,10 @@ TaskList = React.createClass
       Table {},
         thead {},
           tr {},
-            th {}, '#'
-            th {}, 'Name'
-            th {}, 'Dependencies'
-            th {}, 'Actions'
+            th {className: 'col-md-1'}, '#'
+            th {className: 'col-md-6'}, 'Name'
+            th {className: 'col-md-3'}, 'Dependencies'
+            th {className: 'col-md-2'}, 'Actions'
         tbody {}, listItems
       EnterToInputText
         onChange: @onInputChange

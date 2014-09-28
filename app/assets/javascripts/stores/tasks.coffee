@@ -14,7 +14,13 @@ module.exports = Reflux.createStore
     @listenTo action.destroy, @destroy
 
   parse: (data) ->
-    data.map (item) -> new Task(item)
+    @data = data.map (item) -> new Task(item)
+    @reorder()
+
+  reorder: ->
+    @data = _.chain(@data).
+    sortBy('id').
+    value()
 
   index: ->
     $.getJSON '/api/tasks', (data) =>
@@ -30,6 +36,7 @@ module.exports = Reflux.createStore
         task: task
     ).done (task) =>
       @data.push new Task(task)
+      @reorder()
       @trigger @data
 
   update: (task) ->
@@ -43,6 +50,7 @@ module.exports = Reflux.createStore
       @data = _.filter @data, (t) ->
         t.id != task.id
       @data.push new Task(task)
+      @reorder()
       @trigger @data
 
   destroy: (id) ->
