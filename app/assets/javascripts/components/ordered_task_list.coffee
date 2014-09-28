@@ -67,7 +67,7 @@ OrderedTaskList = React.createClass
 
   handleInputChange: ->
     state = @state
-    state.filterString = @refs.input.getValue().trim()
+    state.filterString = @refs.input.getValue()
     @setState state
 
   handleHideButtonClick: (id) ->

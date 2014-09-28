@@ -93,7 +93,6 @@ TaskList = React.createClass
     @setState data: data
 
   onInputChange: (text = '') ->
-    text = text.trim()
     state = @state
     state.filterString = if text.length > 0 then text.toLowerCase() else null
 
