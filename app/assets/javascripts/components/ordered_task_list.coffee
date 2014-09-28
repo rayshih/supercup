@@ -1,5 +1,5 @@
-{div, thead, tbody, th, tr, td} = React.DOM
-{Table, Button} = require 'react-bootstrap'
+{div, thead, tbody, th, tr, td, h3} = React.DOM
+{Input, Table, Button} = require 'react-bootstrap'
 Reflux = require 'reflux'
 TaskAction = require '../actions/tasks'
 taskStore = require '../stores/tasks'
@@ -65,6 +65,11 @@ OrderedTaskList = React.createClass
       rank: sorter.depth
       milestone: sorter.milestone
 
+  handleInputChange: ->
+    state = @state
+    state.filterString = @refs.input.getValue().trim()
+    @setState state
+
   handleHideButtonClick: (id) ->
     state = @state
     state.hidden.push id
@@ -72,7 +77,13 @@ OrderedTaskList = React.createClass
 
   render: ->
     listItems = @state.data.filter((task) =>
-      @state.hidden.indexOf(task.id) == -1
+      isntHidden = @state.hidden.indexOf(task.id) == -1
+
+      if @state.filterString
+        task.getName().toLowerCase().indexOf(@state.filterString) != -1 and
+          isntHidden
+      else
+        isntHidden
     ).map (task) =>
       rank = @state.rank[task.id]
       milestone = @state.milestone[task.id]
@@ -82,6 +93,14 @@ OrderedTaskList = React.createClass
         task, rank, milestone
       }
 
-    OrderedTaskListTable {items: listItems}
+    div {},
+      h3 {}, 'Filter:'
+      Input {
+        type: 'text'
+        ref: 'input'
+        value: @state.filterString
+        onChange: @handleInputChange
+      }
+      OrderedTaskListTable {items: listItems}
 
 module.exports = OrderedTaskList
