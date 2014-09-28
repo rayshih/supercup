@@ -14,21 +14,24 @@ EnterToInputText = React.createClass
     current: @props.value or ''
 
   handleInputChange: (e) ->
+    value = @refs.input.getValue() or ''
+    @props.onChange? value
+
     @setState
-      current: @refs.input.getValue() or ''
+      current: value
 
   handleInputKeyPress: (e) ->
     return if e.key isnt "Enter"
-    @triggerChange()
+    @triggerEnter()
 
   handleBlur: ->
     if @props.inputOnBlur
-      @triggerChange()
+      @triggerEnter()
 
-  triggerChange: ->
+  triggerEnter: ->
     current = @state.current
     @setState current: ''
-    @props.onChange current
+    @props.onEnter current
 
   render: ->
     Input
@@ -67,7 +70,7 @@ ClickToEditText = React.createClass
       EnterToInputText
         value: @props.children
         inputOnBlur: true
-        onChange: @onInputChange
+        onEnter: @onInputChange
     else
       span {onClick: @handleClick},
         @valueForDisplay @props.children

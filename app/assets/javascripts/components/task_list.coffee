@@ -1,4 +1,4 @@
-{div, thead, tbody, tr, th, td, span} = React.DOM
+{div, thead, tbody, tr, th, td, span, ul, li, h3} = React.DOM
 {Table, Button} = require 'react-bootstrap'
 Reflux = require 'reflux'
 TaskAction = require '../actions/tasks'
@@ -92,18 +92,39 @@ TaskList = React.createClass
   onStoreChange: (data) ->
     @setState data: data
 
-  onInputChange: (text) ->
+  onInputChange: (text = '') ->
+    text = text.trim()
+    state = @state
+    state.filterString = if text.length > 0 then text.toLowerCase() else null
+
+    @setState state
+
+  onInputEnter: (text) ->
     TaskAction.create name: text
     @setState data: @state.data
 
   render: ->
-    listItems = @state.data.map (task) ->
+    data = @state.data
+
+    filterString = @state.filterString
+    hintList = if filterString
+      ul {}, _.chain(data).filter((task) ->
+        task.getName().toLowerCase().indexOf(filterString) != -1
+      ).take(5).map((task) ->
+        li {key: task.id}, task.getName()
+      ).value()
+    else null
+
+    listItems = data.map (task) ->
       TaskListItem {key: task.id, task: task}
 
     div {},
+      h3 {}, 'Insert new Task:'
       EnterToInputText
         onChange: @onInputChange
+        onEnter: @onInputEnter
         value: @state.currentNewTaskName
+      hintList,
       TaskListTable {items: listItems}
 
 module.exports = TaskList
