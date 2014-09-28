@@ -3,46 +3,7 @@
 Reflux = require 'reflux'
 TaskAction = require '../actions/tasks'
 taskStore = require '../stores/tasks'
-
-ClickToEditText = React.createClass
-  displayName: 'ClickToEditText'
-
-  getInitialState: ->
-    editMode: false
-    current: @props.children
-
-  handleClick: ->
-    @setState
-      editMode: true
-      current: @props.children
-
-  handleInputChange: (e) ->
-    @setState
-      editMode: true
-      current: @refs.input.getValue()
-
-  handleInputKeyPress: (e) ->
-    return if e.key isnt "Enter"
-    @finishEdit()
-
-  finishEdit: ->
-    current = @refs.input.getValue()
-    @props.onChange current
-    @setState
-      editMode: false
-      current: current
-
-  render: ->
-    if @state.editMode
-      Input
-        type: 'text'
-        ref: 'input'
-        value: @state.current
-        onKeyPress: @handleInputKeyPress
-        onChange: @handleInputChange
-        onBlur: @finishEdit
-    else
-      span {onClick: @handleClick}, @state.current
+{EnterToInputText, ClickToEditText} = require '../components/utils'
 
 TaskListItem = React.createClass
   displayName: 'TaskListItem'
@@ -69,7 +30,6 @@ TaskList = React.createClass
   mixins: [Reflux.ListenerMixin]
 
   getInitialState: ->
-    currentNewTaskName: ''
     data : []
 
   componentDidMount: ->
@@ -78,28 +38,15 @@ TaskList = React.createClass
     TaskAction.index()
 
   onStoreChange: (data) ->
-    @setState
-      currentNewTaskName: @state.currentNewTaskName
-      data: data
+    @setState data: data
 
-  handleInputChange: (e) ->
-    @setState
-      currentNewTaskName: @refs.input.getValue()
-      data: @state.data
-
-  handleInputKeyPress: (e) ->
-    return if e.key isnt "Enter"
-
-    newTaskName = @refs.input.getValue()
-    TaskAction.create name: newTaskName
-
-    @setState
-      currentNewTaskName: ''
-      data: @state.data
+  onInputChange: (text) ->
+    TaskAction.create name: text
+    @setState data: @state.data
 
   render: ->
-    listItems = @state.data.map (task, i) ->
-      TaskListItem {key: i, task: task}
+    listItems = @state.data.map (task) ->
+      TaskListItem {key: task.id, task: task}
 
     div {},
       Table {},
@@ -109,12 +56,9 @@ TaskList = React.createClass
             th {}, 'Name'
             th {}, 'Actions'
         tbody {}, listItems
-      Input
-        type: 'text'
-        ref: 'input'
+      EnterToInputText
+        onChange: @onInputChange
         value: @state.currentNewTaskName
-        onKeyPress: @handleInputKeyPress
-        onChange: @handleInputChange
 
 module.exports = TaskList
 
