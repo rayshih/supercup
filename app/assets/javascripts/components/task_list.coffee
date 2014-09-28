@@ -4,11 +4,10 @@ Reflux = require 'reflux'
 TaskAction = require '../actions/tasks'
 taskStore = require '../stores/tasks'
 {EnterToInputText, ClickToEditText} = require '../components/utils'
+TaskListTable = require './task_list_table'
 
 TaskListItem = React.createClass
   displayName: 'TaskListItem'
-  handleDeleteButtonClick: ->
-    TaskAction.destroy @props.task.id
 
   handleNameChange: (name) ->
     task = @props.task
@@ -19,6 +18,9 @@ TaskListItem = React.createClass
     task = @props.task
     task.setDependenciesString dStr
     TaskAction.update task
+
+  handleDeleteButtonClick: ->
+    TaskAction.destroy @props.task.id
 
   render: ->
     task = @props.task
@@ -58,14 +60,7 @@ TaskList = React.createClass
       TaskListItem {key: task.id, task: task}
 
     div {},
-      Table {},
-        thead {},
-          tr {},
-            th {className: 'col-md-1'}, '#'
-            th {className: 'col-md-6'}, 'Name'
-            th {className: 'col-md-3'}, 'Dependencies'
-            th {className: 'col-md-2'}, 'Actions'
-        tbody {}, listItems
+      TaskListTable {items: listItems}
       EnterToInputText
         onChange: @onInputChange
         value: @state.currentNewTaskName

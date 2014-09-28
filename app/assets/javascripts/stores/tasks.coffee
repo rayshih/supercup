@@ -23,6 +23,8 @@ module.exports = Reflux.createStore
     value()
 
   index: ->
+    @trigger @data
+
     $.getJSON '/api/tasks', (data) =>
       @data = @parse data
       @trigger @data
