@@ -6,6 +6,7 @@ window.React = require 'react'
 {NavItem} = require './components/utils'
 TaskList = require './components/task_list'
 OrderedTaskList = require './components/ordered_task_list'
+TaskTreeList = require './components/task_tree_list'
 
 App = React.createClass
   displayName: 'App'
@@ -16,12 +17,14 @@ App = React.createClass
           Link {to: '/', className: 'navbar-brand'}, 'SuperCup'
         Nav {},
           NavItem {to: 'order'}, 'Order'
-      div {className: 'container theme-showcase'},
+          NavItem {to: 'tree'}, 'Tree'
+      div {className: 'container'},
         @props.activeRouteHandler()
 
 routes = Routes {location:"history"},
   Route {path:"/", handler: App},
     DefaultRoute {handler: TaskList}
     Route {name:"order", handler: OrderedTaskList}
+    Route {name:"tree", handler: TaskTreeList}
 
 $ -> React.renderComponent routes, document.body
