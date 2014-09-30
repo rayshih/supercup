@@ -75,6 +75,7 @@ class TasksController < ApplicationController
                                    :description,
                                    :priority,
                                    :milestone,
+                                   :parent_id,
                                    :dependencies => [])
     end
 end

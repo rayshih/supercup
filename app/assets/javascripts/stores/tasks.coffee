@@ -12,6 +12,10 @@ module.exports = Reflux.createStore
     @listenTo action.create, @create
     @listenTo action.update, @update
     @listenTo action.destroy, @destroy
+    @listenTo action.setParent, @setParent
+
+  get: (id) ->
+    _.find @data, (task) -> task.id == id
 
   parse: (data) ->
     @data = data.map (item) -> new Task(item)
@@ -64,4 +68,18 @@ module.exports = Reflux.createStore
       method: 'DELETE'
       dataType: 'json'
       url: "/api/tasks/#{id}"
+
+  setParent: (childId, parentId) ->
+    childTask = @get childId
+    childTask.setParentId parentId
+    @trigger @data
+
+    $.ajax(
+      method: 'PUT'
+      dataType: 'json'
+      url: "/api/tasks/#{childId}"
+      data:
+        task:
+          parent_id: parentId
+    )
 

@@ -5,4 +5,5 @@ module.exports = Reflux.createActions [
   'create'
   'destroy'
   'update'
+  'setParent'
 ]

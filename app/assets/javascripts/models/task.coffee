@@ -11,6 +11,9 @@ class Task
   getPriority: -> @data.priority
   setPriority: (priority) -> @data.priority = priority
 
+  getParentId: -> @data.parent_id
+  setParentId: (id) -> @data.parent_id = id
+
   getDependencies: -> @data.dependencies or []
 
   setDependenciesString: (str) ->
