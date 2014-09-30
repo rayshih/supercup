@@ -1,9 +1,10 @@
 _ = require 'lodash'
-{div} = React.DOM
-{Glyphicon} = require 'react-bootstrap'
+{div, span, ul, li} = React.DOM
+{Glyphicon, Button} = require 'react-bootstrap'
 Reflux = require 'reflux'
 taskStore = require '../stores/tasks'
 TaskAction = require '../actions/tasks'
+{EnterToInputText} = require '../components/utils'
 
 sortNodes = (nodes) ->
   nodes.forEach (node) ->
@@ -36,14 +37,13 @@ toTrees = (list) ->
       roots.push node
 
   sortedRoots = sortNodes roots
-  console.log sortedRoots
-
   sortedRoots
 
 Tree = React.createClass
   displayName: 'Tree'
   getInitialState: ->
     showSubtree: false
+    isHoverHandle: false
 
   toggle: ->
     @setState showSubtree: !@state.showSubtree
@@ -51,6 +51,7 @@ Tree = React.createClass
   handleDragStart: (ev) ->
     task = @props.node.task
     ev.dataTransfer.setData 'childTaskId', task.id
+    # @state.isHoverHandle
 
   allowDrop: (ev) ->
     ev.preventDefault()
@@ -67,6 +68,15 @@ Tree = React.createClass
     childTaskId = parseInt ev.dataTransfer.getData('childTaskId'), 10
     TaskAction.setParent childTaskId, null
 
+  handleDeleteButtonClick: ->
+    TaskAction.destroy @props.node.task.id
+
+  handleMouseOverHandle: ->
+    @setState isHoverHandle: true
+
+  handleMouseOutHandle: ->
+    @setState isHoverHandle: false
+
   render: ->
     node = @props.node
     title = node.task.getName()
@@ -77,9 +87,7 @@ Tree = React.createClass
       'background-color': 'white'
       border: "gray 1px solid"
       padding: "5px"
-      cursor: 'pointer'
       position: 'relative'
-      '-webkit-user-select': 'none'
 
     wrapperStyle =
       position: 'relative'
@@ -95,13 +103,20 @@ Tree = React.createClass
       "margin-left": "2em"
 
     icon = null
-
     if children
       if @state.showSubtree
-        icon = div {className: 'pull-right'}, Glyphicon(glyph:"minus")
+        icon = Glyphicon(glyph:"minus")
       else
         titleStyle['background-color'] = 'LightBlue'
-        icon = div {className: 'pull-right'}, Glyphicon(glyph:"plus")
+        icon = Glyphicon(glyph:"plus")
+
+    deleteBtn = Button {
+      bsStyle: 'danger'
+      bsSize: 'xsmall'
+      onClick: @handleDeleteButtonClick
+    }, 'Delete'
+
+    options = div {className: 'pull-right'}, icon or deleteBtn
 
     titleDom =
       div {
@@ -112,7 +127,17 @@ Tree = React.createClass
 
         style: titleStyle
         onClick: @toggle
-      }, title, icon
+      },
+        Button {
+          bsSize: 'xsmall'
+          onMouseOver: @handleMouseOverHandle
+          onMouseOut: @handleMouseOutHandle
+        }, Glyphicon(glyph: "align-justify")
+        span {
+          style:
+            'margin-left': '7px'
+        }, title
+        options
 
     subtreeDom = if children and @state.showSubtree
       div {style: wrapperStyle},
@@ -135,19 +160,49 @@ TaskTreeList = React.createClass
 
   getInitialState: ->
     data: []
+    trees: []
 
   componentDidMount: ->
     @listenTo taskStore, @onStoreChange
     TaskAction.index()
 
   onStoreChange: (data) ->
-    @setState data: toTrees(data)
+    @setState
+      data: data
+      trees: toTrees(data)
+
+  onInputChange: (text = '') ->
+    state = @state
+    state.filterString = if text.length > 0 then text.toLowerCase() else null
+
+    @setState state
+
+  onInputEnter: (text) ->
+    @setState filterString: null
+    TaskAction.create name: text
 
   render: ->
-    trees = @state.data.map (tree, i) ->
+    data = @state.data
+
+    filterString = @state.filterString
+    hintList = if filterString
+      ul {}, _.chain(data).filter((task) ->
+        task.getName().toLowerCase().indexOf(filterString) != -1
+      ).map((task) ->
+        li {key: task.id}, task.getName()
+      ).value()
+    else null
+
+    trees = @state.trees.map (tree, i) ->
       Tree {key: i, node: tree}
 
-    div {}, trees
+    div {},
+      EnterToInputText
+        onChange: @onInputChange
+        onEnter: @onInputEnter
+        value: @state.currentNewTaskName
+      hintList,
+      trees
 
 module.exports = TaskTreeList
 
