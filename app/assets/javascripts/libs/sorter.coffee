@@ -20,7 +20,12 @@ class Sorter
     findMaxDepth = (task, depth) =>
       maxDepth = _.max([maxDepth, depth])
       task.getDependencies().forEach (id) =>
-        findMaxDepth @hash[id], depth + 1
+        childTask = @hash[id]
+        if not childTask
+          console.error "task #{task.id}'s dependency #{id} not found"
+          return
+
+        findMaxDepth childTask, depth + 1
 
     @data.forEach (task) -> findMaxDepth task, 0
 
@@ -31,7 +36,11 @@ class Sorter
         return maxDepth - 1
 
       depth = _.chain(dependencies).map((id) =>
-        assignDepths @hash[id]
+        childTask = @hash[id]
+        if not childTask
+          console.error "task #{task.id}'s dependency #{id} not found"
+          return
+        assignDepths childTask
       ).min().value()
 
       @depth[task.id] = depth
@@ -46,8 +55,11 @@ class Sorter
       @milestone[task.id] = _.min([@milestone[task.id], milestone])
 
       task.getDependencies().forEach (id) =>
-        t = @hash[id]
-        assignMilestones t, @milestone[task.id]
+        childTask = @hash[id]
+        if not childTask
+          console.error "task #{task.id}'s dependency #{id} not found"
+          return
+        assignMilestones childTask, @milestone[task.id]
 
     @data.forEach (task) -> assignMilestones task
 
