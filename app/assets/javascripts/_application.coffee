@@ -6,7 +6,7 @@ window.React = require 'react'
 {NavItem} = require './components/utils'
 TaskList = require './components/task_list'
 OrderedTaskList = require './components/ordered_task_list'
-TaskTreeList = require './components/task_tree_list'
+TaskTreeList = require './components/task_tree_list/index'
 Assign = require './components/assign'
 
 App = React.createClass
