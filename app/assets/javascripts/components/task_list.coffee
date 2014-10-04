@@ -1,6 +1,6 @@
 {div, thead, tbody, tr, th, td, span, ul, li, h3} = React.DOM
-{Table, Button} = require 'react-bootstrap'
 Reflux = require 'reflux'
+{Table, Button} = require 'react-bootstrap'
 TaskAction = require '../actions/tasks'
 taskStore = require '../stores/tasks'
 {EnterToInputText, ClickToEditText} = require '../components/utils'
@@ -122,7 +122,6 @@ TaskList = React.createClass
       EnterToInputText
         onChange: @onInputChange
         onEnter: @onInputEnter
-        value: @state.currentNewTaskName
       hintList,
       TaskListTable {items: listItems}
 
