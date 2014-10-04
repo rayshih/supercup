@@ -18,11 +18,12 @@ Field = React.createClass
       h4 {}, label
       @transferPropsTo(ClickToEditText({}, value))
 
-WorkerSelect = React.createClass
-  displayName: 'WorkerSelect'
+ClickToSelectWorker = React.createClass
+  displayName: 'ClickToSelectWorker'
 
   getInitialState: ->
     currentWorkerId: @props.currentWorkerId
+    editMode: false
 
   onChange: ->
     value = @refs.select.getValue()
@@ -30,17 +31,27 @@ WorkerSelect = React.createClass
     workerId = null if isNaN workerId
     @props.onChange workerId
 
-  render: ->
-    options = @props.workers.map (worker) ->
-      option {key: worker.id, value: worker.id}, worker.getName()
-    options.unshift option({key: 0, value: 'null'}, 'null (Please Select One)')
+  handleClick: -> @setState editMode: true
+  handleBlur: -> @setState editMode: false
 
-    Input {
-      ref: 'select'
-      type: 'select'
-      onChange: @onChange
-      value: @props.currentWorkerId
-    }, options
+  render: ->
+    if @state.editMode
+      options = @props.workers.map (worker) ->
+        option {key: worker.id, value: worker.id}, worker.getName()
+      options.unshift option({key: 0, value: 'null'}, 'null (Please Select One)')
+
+      Input {
+        ref: 'select'
+        type: 'select'
+        onChange: @onChange
+        value: @props.currentWorkerId
+      }, options
+    else
+      worker = _.find @props.workers, (worker) => worker.id == @props.currentWorkerId
+      span {
+        onClick: @handleClick
+        onBlur: @handleBlur
+      }, worker?.getName() or '(null)'
 
 TaskModal = React.createClass
   displayName: 'TaskModal'
@@ -138,7 +149,7 @@ TaskModal = React.createClass
           onChange: @handlePriorityChange
         }
         h4 {}, 'Assigned To:'
-        WorkerSelect {
+        ClickToSelectWorker {
           workers: @state.workers
           currentWorkerId: task.getAssignedWorkerId()
           onChange: @handleWorkerSelectChange
