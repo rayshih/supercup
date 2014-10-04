@@ -4,7 +4,6 @@ window.React = require 'react'
 {Navbar, Nav} = require 'react-bootstrap'
 {div, li} = React.DOM
 {NavItem} = require './components/utils'
-TaskList = require './components/task_list'
 OrderedTaskList = require './components/ordered_task_list'
 TaskTreeList = require './components/task_tree_list/index'
 Assign = require './components/assign'
@@ -19,7 +18,6 @@ App = React.createClass
           Link {to: '/', className: 'navbar-brand'}, 'SuperCup'
         Nav {},
           NavItem {to: 'order'}, 'Order'
-          NavItem {to: 'tree'}, 'Tree'
           NavItem {to: 'assign'}, 'Assign'
           NavItem {to: 'workers'}, 'Workers'
       div {className: 'container'},
@@ -27,9 +25,8 @@ App = React.createClass
 
 routes = Routes {location:"history"},
   Route {path:"/", handler: App},
-    DefaultRoute {handler: TaskList}
+    DefaultRoute {handler: TaskTreeList}
     Route {name: 'order', handler: OrderedTaskList}
-    Route {name: 'tree', handler: TaskTreeList}
     Route {name: 'assign', handler: Assign}
     Route {name: 'workers', handler: WorkerList}
 

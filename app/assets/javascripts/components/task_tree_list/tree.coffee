@@ -2,6 +2,7 @@
 {Glyphicon, Button, ModalTrigger, Label} = require 'react-bootstrap'
 TaskModal = require '../task_modal'
 TaskAction = require '../../actions/tasks'
+TaskListItem = require '../task_list_item'
 
 TreeTitle = React.createClass
   displayName: 'TreeTitle'
@@ -40,9 +41,6 @@ TreeTitle = React.createClass
       ' '
       toggleBtn or deleteBtn
 
-    milestone = task.getMilestone()
-    priority = task.getPriority()
-
     div {
       className: titleClassName
       draggable: true
@@ -50,14 +48,7 @@ TreeTitle = React.createClass
       onDragOver: @props.onDragOver
       onDrop: @props.onDrop
     },
-      span {className: 'title'},
-        Label {}, "##{task.id}"
-        ' '
-        task.getName().substring(0, 70)
-        ' '
-        if milestone then Label {bsStyle: 'primary'}, "M#{milestone}"
-        ' '
-        if priority then Label {bsStyle: 'warning'}, "P#{priority}"
+      TaskListItem {task: task}
       options
 
 Subtree = React.createClass
@@ -76,8 +67,7 @@ Subtree = React.createClass
 Tree = React.createClass
   displayName: 'Tree'
   getInitialState: ->
-    showSubtree: false
-    isHoverHandle: false
+    showSubtree: true
 
   toggle: ->
     @setState showSubtree: !@state.showSubtree
@@ -120,10 +110,10 @@ Tree = React.createClass
         onDragOver: @allowDrop
         onDrop: @handleDropOnTask
       }
-        if children and @state.showSubtree
-          Subtree {
-            onDragOver: @allowDrop
-            onDropToIndent: @handleDropOnOther
-          }, children
+      if children and @state.showSubtree
+        Subtree {
+          onDragOver: @allowDrop
+          onDropToIndent: @handleDropOnOther
+        }, children
 
 module.exports = Tree

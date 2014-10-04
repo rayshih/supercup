@@ -1,6 +1,7 @@
 {div, span, h4} = React.DOM
 {Button, Modal, Label} = require 'react-bootstrap'
 {ClickToEditText} = require '../components/utils'
+TaskListItem = require './task_list_item'
 TaskAction = require '../actions/tasks'
 taskStore = require '../stores/tasks'
 
@@ -31,6 +32,15 @@ TaskModal = React.createClass
       task.setMilestone milestone
     TaskAction.update task
 
+  handleDurationChange: (dStr) ->
+    task = @props.task
+    duration = parseInt dStr, 10
+    task.setDuration if isNaN duration
+      null
+    else
+      duration
+    TaskAction.update task
+
   handlePriorityChange: (pStr) ->
     task = @props.task
     priority = parseInt(pStr, 10)
@@ -51,21 +61,11 @@ TaskModal = React.createClass
     dependencyList = task.getDependencies().map (depId) ->
       t = taskStore.get depId
 
-      milestone = t.getMilestone()
-      priority = t.getPriority()
-
       div {
         key: depId
         className: 'title-bar'
       },
-        span {className: 'title'},
-          Label {}, "##{t.id}"
-          ' '
-          t.getName().substring(0, 70)
-          ' '
-          if milestone then Label {bsStyle: 'primary'}, "M#{milestone}"
-          ' '
-          if priority then Label {bsStyle: 'warning'}, "P#{priority}"
+        TaskListItem {task: t}
 
     Modal {
       title: "##{task.id}"
@@ -73,6 +73,13 @@ TaskModal = React.createClass
     },
       div {className: 'modal-body'},
         Field {label: 'Task Name:', value: task.getName(), onChange: @handleNameChange}
+        Field {
+          label: 'Duration:'
+          value: task.getDuration()
+          enableEmpty: true
+          defaultValue: '(Unssign)'
+          onChange: @handleDurationChange
+        }
         Field {
           label: 'Milestone:'
           value: task.getMilestone()

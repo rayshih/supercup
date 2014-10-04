@@ -15,6 +15,9 @@ class Task
   getParentId: -> @data.parent_id
   setParentId: (id) -> @data.parent_id = id
 
+  getDuration: -> @data.duration
+  setDuration: (t) -> @data.duration = t
+
   getDependencies: -> @data.dependencies or []
 
   setDependenciesString: (str) ->
