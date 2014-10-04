@@ -48,26 +48,26 @@ class Sorter
 
     @roots.forEach (task) -> assignMilestones task
 
-  _bfsRev: ->
-    seq = []
+  _assignDepths: () ->
+    @depth = {}
 
-    bfs = (ids) =>
-      ids.forEach (id) ->
-        seq.push id if seq.indexOf(id) == -1
+    assignDepth = (tid, depth) =>
+      @depth[tid] or= -Infinity
+      @depth[tid] = _.max [@depth[tid], depth]
 
-      ids.forEach (id) =>
-        bfs @sinks[id] if @sinks[id]
+      sinks = @sinks[tid]
+      return unless sinks
 
-    bfs @rootIds
+      sinks.forEach (id) =>
+        assignDepth id, @depth[tid] + 1
 
-    seq.reverse()
+    @rootIds.forEach (id) -> assignDepth id, 0
 
   sort: ->
     start = Date.now()
 
     @_assignMilestones()
-    bfsRev = @_bfsRev()
-    seq = []
+    @_assignDepths()
 
     shouldSwap = (a, b) =>
       return false if @sinks[b]?.indexOf(a) != -1
@@ -85,7 +85,13 @@ class Sorter
       seq[i] = seq[j]
       seq[j] = id
 
-    bfsRev.forEach (id) ->
+    seq = []
+    ids = @data.map (task) ->
+      task.id
+
+    _.sortBy(ids, (id) =>
+      -@depth[id]
+    ).forEach (id) ->
       seq.push id
       return if seq.length < 2
       for i in [(seq.length-1)..1]
