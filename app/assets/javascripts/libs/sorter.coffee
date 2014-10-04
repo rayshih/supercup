@@ -2,21 +2,27 @@ _ = require 'lodash'
 
 class Sorter
   constructor: (@data) ->
-    @init()
+    @_genHash()
+    @_findRoots()
 
-  init: ->
-    @hash = {}
+  _genHash: ->
+    @hash = {} # id -> node
     @data.forEach (task) =>
       @hash[task.id] = task
 
-  sort: ->
-    # calculate depth
-    @depth = {}
-    @milestone = {}
+  _findRoots: ->
+    beenRefer = []
 
-    # TODO speed up by search roots
+    @data.forEach (task) =>
+      beenRefer = _.union beenRefer, task.getDependencies()
+      beenRefer = _.union beenRefer, [task.id] if task.getParentId()
 
+    ids = @data.map (task) -> task.id
+    @roots = _.difference(ids, beenRefer).map (id) => @hash[id]
+
+  _findMaxDepthFromData: ->
     maxDepth = 0
+
     findMaxDepth = (task, depth) =>
       maxDepth = _.max([maxDepth, depth])
       task.getDependencies().forEach (id) =>
@@ -27,8 +33,11 @@ class Sorter
 
         findMaxDepth childTask, depth + 1
 
-    @data.forEach (task) -> findMaxDepth task, 0
+    @roots.forEach (task) -> findMaxDepth task, 0
+    maxDepth
 
+  _assignDepths: (maxDepth) ->
+    @depth = {}
     assignDepths = (task) =>
       dependencies = task.getDependencies()
       if dependencies.length == 0
@@ -46,12 +55,15 @@ class Sorter
       @depth[task.id] = depth
       depth - 1
 
-    @data.forEach (task) -> assignDepths task
+    @roots.forEach (task) -> assignDepths task
+
+  _assignMilestones: ->
+    @milestone = {}
 
     assignMilestones = (task, milestone) =>
-      # TODO there is a problem if task.getMilestone() is 0
-      milestone = task.getMilestone() or milestone
-      @milestone[task.id] or= Infinity
+      m = task.getMilestone()
+      milestone = if m isnt null then m else milestone
+      @milestone[task.id] = Infinity if @milestone[task.id] is null
       @milestone[task.id] = _.min([@milestone[task.id], milestone])
 
       task.getDependencies().forEach (id) =>
@@ -61,20 +73,23 @@ class Sorter
           return
         assignMilestones childTask, @milestone[task.id]
 
-    @data.forEach (task) -> assignMilestones task
+    @roots.forEach (task) -> assignMilestones task
+
+  sort: ->
+    maxDepth = @_findMaxDepthFromData()
+    @_assignDepths maxDepth
+    @_assignMilestones()
 
     # sort
     @result = @data.sort (a, b) =>
       ma = @milestone[a.id] or 10000
       mb = @milestone[b.id] or 10000
 
-      if ma - mb isnt 0
-        return ma - mb
+      return ma - mb if ma - mb isnt 0
 
       da = @depth[a.id] or 0
       db = @depth[b.id] or 0
-      if db - da isnt 0
-        return db - da
+      return db - da if db - da isnt 0
 
       pa = a.getPriority() or -1
       pb = b.getPriority() or -1
