@@ -14,9 +14,9 @@ TreeTitle = React.createClass
 
     icon = if @props.hasChildren
       if @props.showSubtree
-        Glyphicon(glyph:"minus")
+        Glyphicon glyph: "minus"
       else
-        Glyphicon(glyph:"plus")
+        Glyphicon glyph: "plus"
 
     toggleBtn = if icon then Button {
       bsSize: 'xsmall'
