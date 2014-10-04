@@ -8,6 +8,7 @@ TaskList = require './components/task_list'
 OrderedTaskList = require './components/ordered_task_list'
 TaskTreeList = require './components/task_tree_list/index'
 Assign = require './components/assign'
+WorkerList = require './components/worker_list'
 
 App = React.createClass
   displayName: 'App'
@@ -20,6 +21,7 @@ App = React.createClass
           NavItem {to: 'order'}, 'Order'
           NavItem {to: 'tree'}, 'Tree'
           NavItem {to: 'assign'}, 'Assign'
+          NavItem {to: 'workers'}, 'Workers'
       div {className: 'container'},
         @props.activeRouteHandler()
 
@@ -29,5 +31,6 @@ routes = Routes {location:"history"},
     Route {name: 'order', handler: OrderedTaskList}
     Route {name: 'tree', handler: TaskTreeList}
     Route {name: 'assign', handler: Assign}
+    Route {name: 'workers', handler: WorkerList}
 
 $ -> React.renderComponent routes, document.body
