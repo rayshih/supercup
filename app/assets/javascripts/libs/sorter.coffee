@@ -3,59 +3,32 @@ _ = require 'lodash'
 class Sorter
   constructor: (@data) ->
     @_genHash()
-    @_findRoots()
+    @_findRootsAndGenSinks()
 
   _genHash: ->
     @hash = {} # id -> node
     @data.forEach (task) =>
       @hash[task.id] = task
 
-  _findRoots: ->
+  _findRootsAndGenSinks: ->
     beenRefer = []
+    @sinks = {}
 
     @data.forEach (task) =>
-      beenRefer = _.union beenRefer, task.getDependencies()
-      beenRefer = _.union beenRefer, [task.id] if task.getParentId()
+      depIds = task.getDependencies()
+      beenRefer = _.union beenRefer, depIds
+      @sinks[task.id] or= []
+      @sinks[task.id] = _.union @sinks[task.id], depIds
+
+      parentId = task.getParentId()
+      if parentId
+        beenRefer = _.union beenRefer, [task.id]
+        @sinks[parentId] or= []
+        @sinks[parentId] = _.union @sinks[parentId], [task.id]
 
     ids = @data.map (task) -> task.id
-    @roots = _.difference(ids, beenRefer).map (id) => @hash[id]
-
-  _findMaxDepthFromData: ->
-    maxDepth = 0
-
-    findMaxDepth = (task, depth) =>
-      maxDepth = _.max([maxDepth, depth])
-      task.getDependencies().forEach (id) =>
-        childTask = @hash[id]
-        if not childTask
-          console.error "task #{task.id}'s dependency #{id} not found"
-          return
-
-        findMaxDepth childTask, depth + 1
-
-    @roots.forEach (task) -> findMaxDepth task, 0
-    maxDepth
-
-  _assignDepths: (maxDepth) ->
-    @depth = {}
-    assignDepths = (task) =>
-      dependencies = task.getDependencies()
-      if dependencies.length == 0
-        @depth[task.id] = maxDepth
-        return maxDepth - 1
-
-      depth = _.chain(dependencies).map((id) =>
-        childTask = @hash[id]
-        if not childTask
-          console.error "task #{task.id}'s dependency #{id} not found"
-          return
-        assignDepths childTask
-      ).min().value()
-
-      @depth[task.id] = depth
-      depth - 1
-
-    @roots.forEach (task) -> assignDepths task
+    @rootIds = _.difference ids, beenRefer
+    @roots = @rootIds.map (id) => @hash[id]
 
   _assignMilestones: ->
     @milestone = {}
@@ -66,7 +39,7 @@ class Sorter
       @milestone[task.id] = Infinity if @milestone[task.id] is null
       @milestone[task.id] = _.min([@milestone[task.id], milestone])
 
-      task.getDependencies().forEach (id) =>
+      @sinks[task.id].forEach (id) =>
         childTask = @hash[id]
         if not childTask
           console.error "task #{task.id}'s dependency #{id} not found"
@@ -75,26 +48,53 @@ class Sorter
 
     @roots.forEach (task) -> assignMilestones task
 
+  _bfsRev: ->
+    seq = []
+
+    bfs = (ids) =>
+      ids.forEach (id) ->
+        seq.push id if seq.indexOf(id) == -1
+
+      ids.forEach (id) =>
+        bfs @sinks[id] if @sinks[id]
+
+    bfs @rootIds
+
+    seq.reverse()
+
   sort: ->
-    maxDepth = @_findMaxDepthFromData()
-    @_assignDepths maxDepth
+    start = Date.now()
+
     @_assignMilestones()
+    bfsRev = @_bfsRev()
+    seq = []
 
-    # sort
-    @result = @data.sort (a, b) =>
-      ma = @milestone[a.id] or 10000
-      mb = @milestone[b.id] or 10000
+    shouldSwap = (a, b) =>
+      return false if @sinks[b]?.indexOf(a) != -1
 
-      return ma - mb if ma - mb isnt 0
+      ma = @milestone[a] or 10000
+      mb = @milestone[b] or 10000
+      return mb < ma unless ma == mb
 
-      da = @depth[a.id] or 0
-      db = @depth[b.id] or 0
-      return db - da if db - da isnt 0
+      pa = @hash[a].getPriority() or -1
+      pb = @hash[b].getPriority() or -1
+      return pb > pa
 
-      pa = a.getPriority() or -1
-      pb = b.getPriority() or -1
-      return pb - pa
+    swap = (i, j) ->
+      id = seq[i]
+      seq[i] = seq[j]
+      seq[j] = id
 
+    bfsRev.forEach (id) ->
+      seq.push id
+      return if seq.length < 2
+      for i in [(seq.length-1)..1]
+        return unless shouldSwap seq[i - 1], seq[i]
+        swap i - 1, i
+
+    @result = seq.map (id) => @hash[id]
+
+    console.log 'sorting time spent:', Date.now() - start
     @result
 
 module.exports = Sorter

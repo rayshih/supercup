@@ -23,6 +23,7 @@ TreeTitle = React.createClass
       onClick: @props.onToggleButtonClick
     }, icon
 
+    # TODO refactor it and this one is slow
     detailBtn = ModalTrigger {
       modal: TaskModal {task: @props.task}
     },

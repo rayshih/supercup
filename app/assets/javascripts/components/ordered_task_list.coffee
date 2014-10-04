@@ -25,13 +25,10 @@ OrderedTaskList = React.createClass
     @setState
       hidden: []
       data: sorter.result
-      rank: sorter.depth
       milestone: sorter.milestone
 
   handleInputChange: ->
-    state = @state
-    state.filterString = @refs.input.getValue()
-    @setState state
+    @setState filterString: @refs.input.getValue().toLowerCase()
 
   handleHideButtonClick: (id) ->
     state = @state
@@ -48,9 +45,9 @@ OrderedTaskList = React.createClass
       else
         isntHidden
     ).map (task) =>
-      rank = @state.rank[task.id]
       milestone = @state.milestone[task.id]
 
+      # TODO refactor it and this one is slow
       detailBtn = ModalTrigger {
         modal: TaskModal {task: task}
       },
@@ -62,7 +59,6 @@ OrderedTaskList = React.createClass
         TaskListItem {task: task}
         div {className: 'pull-right'},
           Label({bsStyle: 'primary'}, "M#{milestone}")
-          ' ', Label({bsStyle: 'info'}, "R#{rank}")
           ' ', detailBtn
 
     div {},
