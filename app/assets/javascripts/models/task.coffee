@@ -1,6 +1,7 @@
 class Task
   constructor: (@data) ->
     @id = @data.id
+    @data.dependencies = @data.dependencies?.map (d) -> parseInt d, 10
 
   getName: -> @data.name
   setName: (name) -> @data.name = name

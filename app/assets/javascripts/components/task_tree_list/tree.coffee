@@ -1,18 +1,33 @@
 {div, span} = React.DOM
-{Glyphicon, Button} = require 'react-bootstrap'
+{Glyphicon, Button, ModalTrigger, Label} = require 'react-bootstrap'
+TaskModal = require '../task_modal'
 TaskAction = require '../../actions/tasks'
 
 TreeTitle = React.createClass
   displayName: 'TreeTitle'
   render: ->
-    titleClassName = 'title'
-    icon = null
-    if @props.hasChildren
+    task = @props.task
+
+    titleClassName = 'title-bar'
+    titleClassName += ' title-bar-fold' if @props.hasChildren
+
+    icon = if @props.hasChildren
       if @props.showSubtree
-        icon = Glyphicon(glyph:"minus")
+        Glyphicon(glyph:"minus")
       else
-        titleClassName += ' title-fold'
-        icon = Glyphicon(glyph:"plus")
+        Glyphicon(glyph:"plus")
+
+    toggleBtn = if icon then Button {
+      bsSize: 'xsmall'
+      onClick: @props.onToggleButtonClick
+    }, icon
+
+    detailBtn = ModalTrigger {
+      modal: TaskModal {task: @props.task}
+    },
+      Button {
+        bsSize: 'xsmall'
+      }, 'Detail'
 
     deleteBtn = Button {
       bsStyle: 'danger'
@@ -20,24 +35,29 @@ TreeTitle = React.createClass
       onClick: @props.onDeleteButtonClick
     }, 'Delete'
 
-    options = div {className: 'pull-right'}, icon or deleteBtn
+    options = div {className: 'pull-right'},
+      detailBtn
+      ' '
+      toggleBtn or deleteBtn
+
+    milestone = task.getMilestone()
+    priority = task.getPriority()
 
     div {
       className: titleClassName
-
       draggable: true
       onDragStart: @props.onDragStart
       onDragOver: @props.onDragOver
       onDrop: @props.onDrop
-      onClick: @props.onClick
     },
-      Button {
-        bsSize: 'xsmall'
-      }, Glyphicon(glyph: "align-justify")
-      span {
-        style:
-          'margin-left': '7px'
-      }, @props.children
+      span {className: 'title'},
+        Label {}, "##{task.id}"
+        ' '
+        task.getName().substring(0, 70)
+        ' '
+        if milestone then Label {bsStyle: 'primary'}, "M#{milestone}"
+        ' '
+        if priority then Label {bsStyle: 'warning'}, "P#{priority}"
       options
 
 Subtree = React.createClass
@@ -91,14 +111,15 @@ Tree = React.createClass
 
     div {className: 'tree'},
       TreeTitle {
+        task: node.task
         hasChildren: children
         showSubtree: @state.showSubtree
-        onClick: @toggle
+        onToggleButtonClick: @toggle
         onDeleteButtonClick: @handleDeleteButtonClick
         onDragStart: @handleDragStart
         onDragOver: @allowDrop
         onDrop: @handleDropOnTask
-      }, title
+      }
         if children and @state.showSubtree
           Subtree {
             onDragOver: @allowDrop

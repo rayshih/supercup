@@ -3,18 +3,26 @@
 
 $tree-indent: 2em;
 
-.tree {
+.title-bar {
+  margin-top: -1px;
+  background-color: white;
+  border: gray 1px solid;
+  padding: 5px;
   position: relative;
 
   .title {
-    margin-top: -1px;
-    background-color: white;
-    border: gray 1px solid;
-    padding: 5px;
-    position: relative;
+    // margin-left: 7px
+    white-space: nowrap;
+    overflow: hidden;
+    width: 80%;
   }
+}
 
-  .title-fold {
+.tree {
+  position: relative;
+
+  .title-bar-fold {
+    width: 100%;
     background-color: LightBlue;
   }
 

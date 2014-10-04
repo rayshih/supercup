@@ -61,13 +61,13 @@ TaskListItem = React.createClass
       td {}, ClickToEditText({onChange: @handleNameChange}, task.getName())
       td {}, ClickToEditText {
         enableEmpty: true
-        onChange: @handleDependenciesChange
         defaultValue: '(empty)'
+        onChange: @handleDependenciesChange
       }, task.getDependenciesString()
       td {}, ClickToEditText {
         enableEmpty: true
-        onChange: @handleMilestoneChange
         defaultValue: '(empty)'
+        onChange: @handleMilestoneChange
       }, task.getMilestone()?.toString()
       td {}, ClickToEditText {
         enableEmpty: true

@@ -13,9 +13,20 @@ sortNodes = (nodes) ->
     if children and children.length > 0
       node.children = sortNodes children
 
-  _.sortBy nodes, (node) ->
-    children = node.children
-    if children and children.length > 0 then 0 else 1
+  nodes.sort (a, b) ->
+    am = a.task.getMilestone() or 10000
+    bm = b.task.getMilestone() or 10000
+    return am - bm if am - bm isnt 0
+
+    aIsNested = if a.children?.length > 0 then 1 else 0
+    bIsNested = if b.children?.length > 0 then 1 else 0
+    return bIsNested - aIsNested if bIsNested - aIsNested isnt 0
+
+    ap = a.task.getPriority() or -10000
+    bp = b.task.getPriority() or -10000
+    return bp - ap if bp - ap isnt 0
+
+    a.task.id - b.task.id
 
 toTrees = (list) ->
   hash = {}
@@ -71,8 +82,8 @@ TaskTreeList = React.createClass
     filterString = @state.filterString
     taskNameList = _.map data, (task) -> task.getName()
 
-    trees = @state.trees.map (tree, i) ->
-      Tree {key: i, node: tree}
+    trees = @state.trees.map (tree) ->
+      Tree {key: tree.task.id, node: tree}
 
     div {},
       EnterToInputText
