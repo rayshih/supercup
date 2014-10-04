@@ -71,7 +71,7 @@ Assign = React.createClass
             padding: 0
         }, list
 
-      tr {},
+      tr {key: workerId},
         th {},
           div {
             style:
@@ -99,8 +99,7 @@ Assign = React.createClass
                 style:
                   width: '150px'
               }, header
-          tbody {},
-            tr {}, body
+          tbody {}, body
 
 
 module.exports = Assign
