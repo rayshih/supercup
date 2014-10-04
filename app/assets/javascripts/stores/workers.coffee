@@ -5,7 +5,7 @@ Worker = require '../models/worker'
 
 module.exports = Reflux.createStore
   init: ->
-    @data = []
+    @data = null
 
     @listenToMany action
 
@@ -22,7 +22,11 @@ module.exports = Reflux.createStore
     value()
 
   onIndex: ->
-    @trigger @data
+    if @data
+      @trigger @data
+      return
+    else
+      @trigger []
 
     $.getJSON '/api/workers', (data) =>
       @data = @parse data

@@ -1,9 +1,12 @@
-{div, span, h4} = React.DOM
-{Button, Modal, Label} = require 'react-bootstrap'
+Reflux = require 'reflux'
+{div, span, h4, option} = React.DOM
+{Button, Modal, Label, Input} = require 'react-bootstrap'
 {ClickToEditText} = require '../components/utils'
 TaskListItem = require './task_list_item'
 TaskAction = require '../actions/tasks'
+WorkerAction = require '../actions/workers'
 taskStore = require '../stores/tasks'
+workerStore = require '../stores/workers'
 
 Field = React.createClass
   displayName: 'Field'
@@ -15,8 +18,43 @@ Field = React.createClass
       h4 {}, label
       @transferPropsTo(ClickToEditText({}, value))
 
+WorkerSelect = React.createClass
+  displayName: 'WorkerSelect'
+
+  getInitialState: ->
+    currentWorkerId: @props.currentWorkerId
+
+  onChange: ->
+    value = @refs.select.getValue()
+    workerId = parseInt value, 10
+    workerId = null if isNaN workerId
+    @props.onChange workerId
+
+  render: ->
+    options = @props.workers.map (worker) ->
+      option {key: worker.id, value: worker.id}, worker.getName()
+    options.unshift option({key: 0, value: 'null'}, 'null (Please Select One)')
+
+    Input {
+      ref: 'select'
+      type: 'select'
+      onChange: @onChange
+      value: @props.currentWorkerId
+    }, options
+
 TaskModal = React.createClass
   displayName: 'TaskModal'
+  mixins: [Reflux.ListenerMixin]
+
+  componentDidMount: ->
+    @listenTo workerStore, @onWorkerStoreChange
+    WorkerAction.index()
+
+  getInitialState: ->
+    workers: []
+
+  onWorkerStoreChange: (workers) ->
+    @setState workers: workers
 
   handleNameChange: (name) ->
     task = @props.task
@@ -50,6 +88,11 @@ TaskModal = React.createClass
       task.setPriority priority
     TaskAction.update task
 
+  handleWorkerSelectChange: (workerId) ->
+    task = @props.task
+    task.setAssignedWorkerId workerId
+    TaskAction.update task
+
   handleDependenciesChange: (dStr) ->
     task = @props.task
     task.setDependenciesString dStr
@@ -77,28 +120,34 @@ TaskModal = React.createClass
           label: 'Duration:'
           value: task.getDuration()
           enableEmpty: true
-          defaultValue: '(Unssign)'
+          defaultValue: '(null)'
           onChange: @handleDurationChange
         }
         Field {
           label: 'Milestone:'
           value: task.getMilestone()
           enableEmpty: true
-          defaultValue: '(empty)'
+          defaultValue: '(null)'
           onChange: @handleMilestoneChange
         }
         Field {
           label: 'Priority:'
           value: task.getPriority()
           enableEmpty: true
-          defaultValue: '(empty)'
+          defaultValue: '(null)'
           onChange: @handlePriorityChange
+        }
+        h4 {}, 'Assigned To:'
+        WorkerSelect {
+          workers: @state.workers
+          currentWorkerId: task.getAssignedWorkerId()
+          onChange: @handleWorkerSelectChange
         }
         Field {
           label: 'Dependencies:'
           value: task.getDependenciesString()
           enableEmpty: true
-          defaultValue: '(empty)'
+          defaultValue: '(null)'
           onChange: @handleDependenciesChange
         }
         div {

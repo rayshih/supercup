@@ -5,4 +5,5 @@ json.extract! @task,
   :milestone,
   :parent_id,
   :duration,
+  :assigned_to,
   :created_at, :updated_at

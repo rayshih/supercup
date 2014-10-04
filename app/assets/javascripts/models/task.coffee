@@ -18,6 +18,9 @@ class Task
   getDuration: -> @data.duration
   setDuration: (t) -> @data.duration = t
 
+  getAssignedWorkerId: -> @data.assigned_to
+  setAssignedWorkerId: (id) -> @data.assigned_to = id
+
   getDependencies: -> @data.dependencies or []
 
   setDependenciesString: (str) ->

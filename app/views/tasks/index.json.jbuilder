@@ -4,6 +4,7 @@ json.array!(@tasks) do |task|
     :dependencies,
     :milestone,
     :parent_id,
-    :duration
+    :duration,
+    :assigned_to
   json.url task_url(task, format: :json)
 end
