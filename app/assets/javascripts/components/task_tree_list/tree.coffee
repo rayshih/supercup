@@ -2,6 +2,57 @@
 {Glyphicon, Button} = require 'react-bootstrap'
 TaskAction = require '../../actions/tasks'
 
+TreeTitle = React.createClass
+  displayName: 'TreeTitle'
+  render: ->
+    titleClassName = 'title'
+    icon = null
+    if @props.hasChildren
+      if @props.showSubtree
+        icon = Glyphicon(glyph:"minus")
+      else
+        titleClassName += ' title-fold'
+        icon = Glyphicon(glyph:"plus")
+
+    deleteBtn = Button {
+      bsStyle: 'danger'
+      bsSize: 'xsmall'
+      onClick: @props.onDeleteButtonClick
+    }, 'Delete'
+
+    options = div {className: 'pull-right'}, icon or deleteBtn
+
+    div {
+      className: titleClassName
+
+      draggable: true
+      onDragStart: @props.onDragStart
+      onDragOver: @props.onDragOver
+      onDrop: @props.onDrop
+      onClick: @props.onClick
+    },
+      Button {
+        bsSize: 'xsmall'
+      }, Glyphicon(glyph: "align-justify")
+      span {
+        style:
+          'margin-left': '7px'
+      }, @props.children
+      options
+
+Subtree = React.createClass
+  displayName: 'Subtree'
+  render: ->
+    div {},
+      div {
+        className: 'indent'
+        onDragOver: @props.onDragOver
+        onDrop: @props.onDropToIndent
+      }
+      div {className: 'subtree'},
+        @props.children.map (subtree) ->
+          Tree {key: subtree.task.id, node: subtree}
+
 Tree = React.createClass
   displayName: 'Tree'
   getInitialState: ->
@@ -33,68 +84,25 @@ Tree = React.createClass
   handleDeleteButtonClick: ->
     TaskAction.destroy @props.node.task.id
 
-  handleMouseOverHandle: ->
-    @setState isHoverHandle: true
-
-  handleMouseOutHandle: ->
-    @setState isHoverHandle: false
-
   render: ->
     node = @props.node
     title = node.task.getName()
     children = node.children
 
-    titleClassName = 'title'
-    icon = null
-    if children
-      if @state.showSubtree
-        icon = Glyphicon(glyph:"minus")
-      else
-        titleClassName += ' title-fold'
-        icon = Glyphicon(glyph:"plus")
-
-    deleteBtn = Button {
-      bsStyle: 'danger'
-      bsSize: 'xsmall'
-      onClick: @handleDeleteButtonClick
-    }, 'Delete'
-
-    options = div {className: 'pull-right'}, icon or deleteBtn
-
-    titleDom =
-      div {
-        className: titleClassName
-
-        draggable: true
+    div {className: 'tree'},
+      TreeTitle {
+        hasChildren: children
+        showSubtree: @state.showSubtree
+        onClick: @toggle
+        onDeleteButtonClick: @handleDeleteButtonClick
         onDragStart: @handleDragStart
         onDragOver: @allowDrop
         onDrop: @handleDropOnTask
-        onClick: @toggle
-      },
-        Button {
-          bsSize: 'xsmall'
-          onMouseOver: @handleMouseOverHandle
-          onMouseOut: @handleMouseOutHandle
-        }, Glyphicon(glyph: "align-justify")
-        span {
-          style:
-            'margin-left': '7px'
-        }, title
-        options
-
-    subtreeDom = if children and @state.showSubtree
-      div {},
-        div {
-          className: 'indent'
-          onDragOver: @allowDrop
-          onDrop: @handleDropOnOther
-        }
-        div {className: 'subtree'},
-          children?.map (subtree) ->
-            Tree {key: subtree.task.id, node: subtree}
-
-    div {className: 'tree'},
-      titleDom
-      subtreeDom
+      }, title
+        if children and @state.showSubtree
+          Subtree {
+            onDragOver: @allowDrop
+            onDropToIndent: @handleDropOnOther
+          }, children
 
 module.exports = Tree
