@@ -25,7 +25,7 @@ ClickToSelectWorker = React.createClass
     currentWorkerId: @props.currentWorkerId
     editMode: false
 
-  onChange: ->
+  handleChange: ->
     value = @refs.select.getValue()
     workerId = parseInt value, 10
     workerId = null if isNaN workerId
@@ -33,6 +33,11 @@ ClickToSelectWorker = React.createClass
 
   handleClick: -> @setState editMode: true
   handleBlur: -> @setState editMode: false
+
+  handleKeyPress: (ev) ->
+    return if ev.key isnt 'Enter'
+    @handleChange()
+    @setState editMode: false
 
   render: ->
     if @state.editMode
@@ -43,14 +48,16 @@ ClickToSelectWorker = React.createClass
       Input {
         ref: 'select'
         type: 'select'
-        onChange: @onChange
+        autoFocus: true
+        onChange: @handleChange
+        onKeyPress: @handleKeyPress
+        onBlur: @handleBlur
         value: @props.currentWorkerId
       }, options
     else
       worker = _.find @props.workers, (worker) => worker.id == @props.currentWorkerId
       span {
         onClick: @handleClick
-        onBlur: @handleBlur
       }, worker?.getName() or '(null)'
 
 TaskModal = React.createClass
