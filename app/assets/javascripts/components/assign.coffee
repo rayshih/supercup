@@ -10,41 +10,7 @@ Sorter = require '../libs/sorter'
 {AutoAssign, Channel} = require '../libs/auto_assign'
 moment = require 'moment'
 
-worker = [
-  'Carlos'
-  '200'
-  'Ray'
-]
-
-s = (workerId, name, begin, end) ->
-  end or= begin
-
-  {
-    workerId: workerId
-    name: name
-    begin: begin
-    end: end
-  }
-
-schedules = [
-  s 0, 'Comment on Spot Overview (old compatible)', 0, 19
-  s 0, 'Tag Management', 0
-  s 0, 'Tuning UI With WebApp (pricing)', 1
-  s 0, 'apple store screen shot', 1
-
-  s 1, 'fix auth bug', 0
-  s 1, 'complete PDF', 0, 1
-  s 1, 'bug fix', 1
-
-  s 2, 'Comment on Spot Overview (old compatible)', 3, 7
-]
-
-convert = (s) ->
-  ({workerId: s.workerId, name: s.name, date: i} for i in [s.begin..s.end])
-
 # TODO    Refactor this file
-# TODO    Redesign algorithm
-# TODO 2: convert tasks duration to (start, end) "day" pair (2 hours
 # ----- Tomorrow -----
 # TODO 3: input all data (3 hours
 # TODO 4: still need a output format for excel (optional
