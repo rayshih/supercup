@@ -1,10 +1,15 @@
 _ = require 'lodash'
+moment = require 'moment'
 
 class AutoAssign
-  constructor: ->
+  constructor: (@startDate) ->
     @channels = {}
 
+  getDateFromIndex: (i) ->
+    moment(@startDate).add(i, 'day')
+
   addChannel: (channel) ->
+    channel.startDate = @startDate
     @channels[channel.id] = channel
 
   assignTask: (task) ->
@@ -21,6 +26,10 @@ class Channel
     @taskBegins = []
     @taskEnds = []
     @tasksIndexByDay = []
+    @leaves = []
+
+  addLeave: (leave) ->
+    @leaves.push leave
 
   assignTask: (task, beginDay) ->
     h = task.getDuration()
@@ -28,6 +37,7 @@ class Channel
 
     if beginDay and beginDay > @currentDay
       @currentDay = beginDay
+      @skipWeekend()
       @currentDayQuota = 8
 
     beginDay = @currentDay
@@ -41,10 +51,13 @@ class Channel
       @tasksIndexByDay[@currentDay].push task
 
       if @currentDayQuota == 0
-        @currentDayQuota = 8
         @currentDay += 1
+        @skipWeekend()
+        @currentDayQuota = 8
 
-    endDay = @currentDay
+    endDay = if @currentDayQuota == 8 then @currentDay - 1 else @currentDay
+
+    console.log task.getName(), beginDay, endDay, @currentDayQuota, @currentDay
 
     @tasks.push task
     @taskBegins.push beginDay
@@ -61,7 +74,13 @@ class Channel
 
       i--
 
-    return after
+    after
+
+  skipWeekend: ->
+    @currentDay += 1 while @isWeekend()
+
+  isWeekend: ->
+    moment(@startDate).add(@currentDay, 'days').isoWeekday() > 5
 
 module.exports = {
   AutoAssign

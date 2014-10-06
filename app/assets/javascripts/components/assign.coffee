@@ -6,6 +6,8 @@ TaskAction = require '../actions/tasks'
 taskStore = require '../stores/tasks'
 WorkerAction = require '../actions/workers'
 workerStore = require '../stores/workers'
+LeaveAction = require '../actions/leaves'
+leaveStore = require '../stores/leaves'
 Sorter = require '../libs/sorter'
 {AutoAssign, Channel} = require '../libs/auto_assign'
 moment = require 'moment'
@@ -24,41 +26,47 @@ Assign = React.createClass
     workers : null
 
   componentDidMount: ->
-    @listenTo taskStore, @onStoreChange
+    # refactor this to another store
+    @listenTo taskStore, @onTaskStoreChange
     @listenTo workerStore, @onWorkerStoreChange
+    @listenTo leaveStore, @onLeaveStoreChange
     TaskAction.index()
     WorkerAction.index()
+    LeaveAction.index()
 
-  onStoreChange: (data) ->
+  onTaskStoreChange: (data) ->
     sorter = new Sorter data
     sorter.sort()
     @setState tasks: sorter.result
 
-  onWorkerStoreChange: (workers) ->
-    @setState {workers}
+  onWorkerStoreChange: (workers) -> @setState {workers}
+  onLeaveStoreChange: (leaves) -> @setState {leaves} # for trigger render TODO refactor
 
   assign: ->
     tasks = @state.tasks
     workers = @state.workers
-    return [] if not workers or workers.length == 0 or not tasks
+    autoAssign = new AutoAssign moment('2014-10-07')
+    return autoAssign if not workers or workers.length == 0 or not tasks
 
-    channels = (new Channel(w.id, w.getName()) for w in workers)
+    channels = (for w in workers
+      c = new Channel(w.id, w.getName())
+      for l in leaveStore.findByWorkerId(w.id)
+        c.addLeave l
+      c
+    )
     channels.push new Channel(100, 'Milestone')
 
-    autoAssign = new AutoAssign
     for c in channels
       autoAssign.addChannel c
 
     for t in tasks
       autoAssign.assignTask t
 
-    hash = {}
-    for c in channels
-      hash[c.id] = c
-    hash
+    autoAssign
 
   render: ->
-    channels = @assign()
+    assign = @assign()
+    channels = assign.channels
 
     numDate = 40
     workers = @state.workers
@@ -69,18 +77,11 @@ Assign = React.createClass
         key: i
         style:
           width: '150px'
-      }, moment().add(i, 'day').format('ddd, MMM DD')
-
-    # week end offset
-    weekDay = moment().isoWeekday()
-    offset = if weekDay > 5 then 8 - weekDay else 0
+      }, assign.getDateFromIndex(i).format('ddd, MMM DD')
 
     # content
     body = _.map channels, (channel) ->
       cells = _.map [0...numDate], (date) ->
-        index = date - offset
-        index = Math.floor(index / 7) * 5 + index % 7
-
         # one day tasks in table
         list = Table {
           bordered: true
@@ -88,14 +89,13 @@ Assign = React.createClass
             tableLayout: 'fixed'
             margin: 0
         },
-        if moment().add(date, 'days').isoWeekday() <= 5
-          channel.tasksIndexByDay[index]?.map((t, i) ->
-            tr {key: i},
-              td {
-                style:
-                  'word-wrap': 'break-word'
-              }, t.getName()
-          )
+        channel.tasksIndexByDay[date]?.map((t, i) ->
+          tr {key: i},
+            td {
+              style:
+                'word-wrap': 'break-word'
+            }, t.getName()
+        )
 
         # outer cell
         td {
