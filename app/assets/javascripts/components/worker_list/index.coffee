@@ -1,28 +1,45 @@
 {div, h3, thead, tbody, th, tr, td} = React.DOM
 Reflux = require 'reflux'
-{Table, Button} = require 'react-bootstrap'
-WorkerAction = require '../actions/workers'
-workerStore = require '../stores/workers'
-{EnterToInputText} = require '../components/utils'
+{Table, Button, ModalTrigger, Modal} = require 'react-bootstrap'
+Leaves = require './leaves'
+WorkerAction = require '../../actions/workers'
+workerStore = require '../../stores/workers'
+{EnterToInputText} = require '../../components/utils'
+
+WorkerModal = React.createClass
+  displayName: 'WorkerModal'
+  render: ->
+    worker = @props.worker
+    Modal {
+      title: worker.getName()
+      onRequestHide: @props.onRequestHide
+    },
+      div {className: 'modal-body'},
+        Leaves {worker}
+      div {className: 'modal-footer'},
+        Button {
+          onClick: @props.onRequestHide
+        }, 'Close'
 
 WorkerRow = React.createClass
   displayName: 'WorkerRow'
 
-  handleClick: ->
-    WorkerAction.destroy @props.worker.id
+  # handleClick: ->
+  #   WorkerAction.destroy @props.worker.id
 
   render: ->
     worker = @props.worker
-    deleteBtn = Button {
-      bsStyle: 'danger'
-      bsSize: 'xsmall'
-      onClick: @handleClick
-    }, 'Delete'
+    editBtn = ModalTrigger {
+      modal: WorkerModal {worker}
+    }, Button {
+        bsSize: 'xsmall'
+        onClick: @handleClick
+      }, 'Edit'
 
     tr {key: worker.id},
       td {}, worker.id
       td {}, worker.getName()
-      td {}, deleteBtn
+      td {}, editBtn
 
 WorkerList = React.createClass
   displayName: 'WorkerList'

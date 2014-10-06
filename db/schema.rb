@@ -11,10 +11,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141004115403) do
+ActiveRecord::Schema.define(version: 20141006134230) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "leaves", force: true do |t|
+    t.integer  "worker_id"
+    t.date     "start_date"
+    t.date     "end_date"
+    t.integer  "hours"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "leaves", ["worker_id"], name: "index_leaves_on_worker_id", using: :btree
 
   create_table "tasks", force: true do |t|
     t.string   "name"

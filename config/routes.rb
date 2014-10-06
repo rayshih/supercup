@@ -1,5 +1,7 @@
 Rails.application.routes.draw do
 
+  resources :leaves
+
   root to: 'welcome#home'
 
   scope "/api" do

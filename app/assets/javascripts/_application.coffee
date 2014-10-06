@@ -7,7 +7,7 @@ window.React = require 'react'
 OrderedTaskList = require './components/ordered_task_list'
 TaskTreeList = require './components/task_tree_list/index'
 Assign = require './components/assign'
-WorkerList = require './components/worker_list'
+WorkerList = require './components/worker_list/index'
 
 App = React.createClass
   displayName: 'App'
