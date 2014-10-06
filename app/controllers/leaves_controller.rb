@@ -69,6 +69,6 @@ class LeavesController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def leafe_params
-      params.require(:leafe).permit(:worker_id, :start_date, :end_date, :hours)
+      params.require(:leave).permit(:worker_id, :start_date, :end_date, :hours)
     end
 end
