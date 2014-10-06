@@ -50,14 +50,13 @@ class Channel
       @tasksIndexByDay[@currentDay] or= []
       @tasksIndexByDay[@currentDay].push task
 
-      if @currentDayQuota == 0
+      while @currentDayQuota == 0
         @currentDay += 1
         @skipWeekend()
         @currentDayQuota = 8
+        @dealWithLeaves()
 
     endDay = if @currentDayQuota == 8 then @currentDay - 1 else @currentDay
-
-    console.log task.getName(), beginDay, endDay, @currentDayQuota, @currentDay
 
     @tasks.push task
     @taskBegins.push beginDay
@@ -81,6 +80,16 @@ class Channel
 
   isWeekend: ->
     moment(@startDate).add(@currentDay, 'days').isoWeekday() > 5
+
+  dealWithLeaves: ->
+    h = 0
+    @leaves.forEach (l) =>
+      date = moment(@startDate).add(@currentDay, 'days')
+      if l.containsDate date
+        h += l.getHours() or 8
+
+    @currentDayQuota -= h
+    @currentDayQuota = 0 if @currentDayQuota < 0
 
 module.exports = {
   AutoAssign

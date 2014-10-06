@@ -12,7 +12,8 @@ Sorter = require '../libs/sorter'
 {AutoAssign, Channel} = require '../libs/auto_assign'
 moment = require 'moment'
 
-# TODO    Refactor this file
+# TODO Refactor this file
+# TODO display leave
 # ----- Tomorrow -----
 # TODO 3: input all data (3 hours
 # TODO 4: still need a output format for excel (optional
@@ -45,7 +46,8 @@ Assign = React.createClass
   assign: ->
     tasks = @state.tasks
     workers = @state.workers
-    autoAssign = new AutoAssign moment('2014-10-07')
+    autoAssign = new AutoAssign moment('2014-10-06')
+    # autoAssign = new AutoAssign moment()
     return autoAssign if not workers or workers.length == 0 or not tasks
 
     channels = (for w in workers
@@ -89,13 +91,14 @@ Assign = React.createClass
             tableLayout: 'fixed'
             margin: 0
         },
-        channel.tasksIndexByDay[date]?.map((t, i) ->
-          tr {key: i},
-            td {
-              style:
-                'word-wrap': 'break-word'
-            }, t.getName()
-        )
+          tbody {},
+            channel.tasksIndexByDay[date]?.map((t) ->
+              tr {key: t.id},
+                td {
+                  style:
+                    'word-wrap': 'break-word'
+                }, t.getName()
+            )
 
         # outer cell
         td {

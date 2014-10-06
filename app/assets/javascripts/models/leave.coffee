@@ -1,3 +1,5 @@
+moment = require 'moment'
+
 class Leave
   @parse: (data) ->
     leave = new @
@@ -21,7 +23,16 @@ class Leave
   getEndDate: -> @data.end_date
   setEndDate: (date) -> @data.end_date = date
 
-  getHours: -> parseInt @data.hours, 10
+  getHours: ->
+    return null unless @data.hours
+    parseInt @data.hours, 10
+
   setHours: (hours) -> @data.hours = hours
+
+  containsDate: (date) ->
+    date = moment date
+    start = moment @data.start_date
+    end = moment(@data.end_date or @data.start_date)
+    start <= date and date <= end
 
 module.exports = Leave
