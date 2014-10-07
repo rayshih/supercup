@@ -68,7 +68,7 @@ Subtree = React.createClass
 Tree = React.createClass
   displayName: 'Tree'
   getInitialState: ->
-    showSubtree: true
+    showSubtree: false
 
   toggle: ->
     @setState showSubtree: !@state.showSubtree

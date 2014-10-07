@@ -86,13 +86,16 @@ TaskTreeList = React.createClass
       Tree {key: tree.task.id, node: tree}
 
     div {},
-      EnterToInputText
-        onChange: @onInputChange
-        onEnter: @onInputEnter
-      FilteredList
-        data: taskNameList
-        filterString: filterString
       trees
+      div {
+        style:
+          marginTop: '10px'
+      }, EnterToInputText
+          onChange: @onInputChange
+          onEnter: @onInputEnter
+        FilteredList
+          data: taskNameList
+          filterString: filterString
 
 module.exports = TaskTreeList
 
