@@ -21,11 +21,14 @@ class Channel
   constructor: (@id, @name) ->
     @currentDay = 0
     @currentDayQuota = 8 # hours by day
+    @lastEndDay = 0
+    @lastEndDayQuota = 8
     @counter = 0
-    @tasks = []
-    @taskBegins = []
-    @taskEnds = []
+
+    @assignments = []
+    @remainSlots = []
     @tasksIndexByDay = []
+
     @leaves = []
 
   addLeave: (leave) ->
@@ -35,13 +38,56 @@ class Channel
     h = task.getDuration()
     h = 1 if not h
 
+    h = @assignToRemainSlot task, h, beginDay
+    h = @assignToEnd task, h, beginDay
+    @counter++
+
+  assignToRemainSlot: (task, h, beginDay) ->
+    slots = []
+    @remainSlots.forEach (s) =>
+      unless s.endDay >= beginDay
+        slots.push s
+        return
+
+      currentDay = s.startDay
+      quota = s.startDayQuota
+      while h > 0 and quota > 0
+        x = _.min [h, quota]
+
+        h -= x
+        quota -= x
+        @tasksIndexByDay[currentDay] or= []
+        @tasksIndexByDay[currentDay].push task
+
+        while quota == 0 and currentDay < s.endDay
+          currentDay += 1
+          currentDay = @skipWeekend currentDay
+          quota = 8
+          quota = @dealWithLeaves currentDay, quota
+
+      end = if quota == 8 then currentDay - 1 else currentDay
+      endDay = _.max [end, s.endDay]
+
+      @assignments.splice s.after, 0, {task, beginDay, endDay}
+      if currentDay < endDay or (currentDay == endDay and quota > 0)
+        slots.push {
+          after: s.after + 1
+          startDay: currentDay
+          startDayQuota: quota
+          endDay: s.endDay
+        }
+
+    @remainSlots = slots
+    h
+
+  assignToEnd: (task, h, beginDay) ->
     if beginDay and beginDay > @currentDay
       @currentDay = beginDay
-      @skipWeekend()
+      @currentDay = @skipWeekend @currentDay
+      @recordRemainSlot()
       @currentDayQuota = 8
 
     beginDay = @currentDay
-
     while h > 0
       x = _.min [h, @currentDayQuota]
 
@@ -52,44 +98,54 @@ class Channel
 
       while @currentDayQuota == 0
         @currentDay += 1
-        @skipWeekend()
+        @currentDay = @skipWeekend @currentDay
         @currentDayQuota = 8
-        @dealWithLeaves()
+        @currentDayQuota = @dealWithLeaves @currentDay, @currentDayQuota
 
     endDay = if @currentDayQuota == 8 then @currentDay - 1 else @currentDay
+    @lastEndDay = endDay
+    @lastEndDayQuota = @currentDayQuota
+    @assignments.push {task, beginDay, endDay}
+    h
 
-    @tasks.push task
-    @taskBegins.push beginDay
-    @taskEnds.push endDay
-    @counter++
+  recordRemainSlot: ->
+    @remainSlots.push {
+      after: @counter - 1
+      startDay: @lastEndDay
+      startDayQuota: @lastEndDayQuota
+      endDay: @currentDay - 1
+    }
 
   validDayToStart: (task, after=0) ->
     i = @counter - 1
     while i >= 0
-      t = @tasks[i]
-      if @taskEnds[i] >= after
+      a = @assignments[i]
+      t = a.task
+      if a.endDay >= after
         if task.getDependencies().indexOf(t.id) != -1 or t.getParentId() == task.id
-          return @taskEnds[i] + 1
+          return a.endDay + 1
 
       i--
 
     after
 
-  skipWeekend: ->
-    @currentDay += 1 while @isWeekend()
+  skipWeekend: (day) ->
+    day += 1 while @isWeekend day
+    day
 
-  isWeekend: ->
-    moment(@startDate).add(@currentDay, 'days').isoWeekday() > 5
+  isWeekend: (day) ->
+    moment(@startDate).add(day, 'days').isoWeekday() > 5
 
-  dealWithLeaves: ->
+  dealWithLeaves: (day, quota) ->
     h = 0
     @leaves.forEach (l) =>
-      date = moment(@startDate).add(@currentDay, 'days')
+      date = moment(@startDate).add(day, 'days')
       if l.containsDate date
         h += l.getHours() or 8
 
-    @currentDayQuota -= h
-    @currentDayQuota = 0 if @currentDayQuota < 0
+    quota -= h
+    quota = 0 if quota < 0
+    quota
 
 module.exports = {
   AutoAssign
