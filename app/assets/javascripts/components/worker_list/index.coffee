@@ -1,6 +1,7 @@
 {div, h3, thead, tbody, th, tr, td} = React.DOM
+_ = require 'lodash'
 Reflux = require 'reflux'
-{Table, Button, ModalTrigger, Modal} = require 'react-bootstrap'
+{Table, Button, ModalTrigger, Modal, Input} = require 'react-bootstrap'
 Leaves = require './leaves'
 WorkerAction = require '../../actions/workers'
 workerStore = require '../../stores/workers'
@@ -8,18 +9,37 @@ workerStore = require '../../stores/workers'
 
 WorkerModal = React.createClass
   displayName: 'WorkerModal'
+
+  onSaveButtonClick: ->
+    order = @refs.order.getValue()
+    worker = @props.worker
+    worker.setOrder order
+    WorkerAction.update worker
+
+    @props.onRequestHide()
+
   render: ->
     worker = @props.worker
+
+    orderInput = Input {
+      ref: 'order'
+      type: 'number'
+      addonBefore: 'order'
+      defaultValue: worker.getOrder()
+    }
+
     Modal {
       title: worker.getName()
       onRequestHide: @props.onRequestHide
     },
       div {className: 'modal-body'},
+        orderInput
         Leaves {worker}
       div {className: 'modal-footer'},
         Button {
-          onClick: @props.onRequestHide
-        }, 'Close'
+          bsStyle: 'primary'
+          onClick: @onSaveButtonClick
+        }, 'Save'
 
 WorkerRow = React.createClass
   displayName: 'WorkerRow'
@@ -40,6 +60,7 @@ WorkerRow = React.createClass
       td {}, worker.id
       td {}, worker.getName()
       td {}, editBtn
+      td {}, worker.getOrder()
 
 WorkerList = React.createClass
   displayName: 'WorkerList'
@@ -53,7 +74,10 @@ WorkerList = React.createClass
     WorkerAction.index()
 
   onStoreChange: (data) ->
-    @setState data: data
+    @setState data: _.sortBy(data, (w) ->
+      w.getOrder()
+    )
+
 
   onInputEnter: (name) ->
     WorkerAction.create name: name
@@ -71,6 +95,7 @@ WorkerList = React.createClass
             th {}, '#'
             th {}, 'Name'
             th {}, 'Actions'
+            th {}, 'Order'
         tbody {}, workerRows
 
 module.exports = WorkerList

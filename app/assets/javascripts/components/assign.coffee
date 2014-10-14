@@ -33,6 +33,44 @@ TaskView = React.createClass
         ' '
         t.getName()
 
+ChannelNameView = React.createClass
+  displayName: 'ChannelNameView'
+  render: ->
+    name = @props.name
+    div {style: minHeight: '100px'},
+      div {
+        style:
+          position: 'absolute'
+          backgroundColor: 'white'
+          border: 'gray 1px solid'
+          padding: '10px'
+      }, name
+
+ChannelTasksView = React.createClass
+  displayName: 'ChannelTasksView'
+  render: ->
+    tasks = @props.tasks
+    # one day tasks in table
+    list = Table {
+      bordered: true
+      style:
+        tableLayout: 'fixed'
+        margin: 0
+    },
+      tbody {},
+        tasks?.map (t) ->
+          TaskView {
+            key: t.id
+            task: t
+          }
+
+    # outer cell
+    td {
+      style:
+        padding: 0
+    }, list
+
+
 Assign = React.createClass
   displayName: 'Assign'
   mixins: [Reflux.ListenerMixin]
@@ -97,39 +135,19 @@ Assign = React.createClass
       }, assign.getDateFromIndex(i).format('ddd, MMM DD')
 
     # content
-    body = _.map channels, (channel) ->
+    body = _(channels).sortBy((c) ->
+      workerStore.get(c.id)?.getOrder()
+    ).map (channel) ->
       cells = _.map [0...numDate], (date) ->
-        # one day tasks in table
-        list = Table {
-          bordered: true
-          style:
-            tableLayout: 'fixed'
-            margin: 0
-        },
-          tbody {},
-            channel.tasksIndexByDay[date]?.map (t) -> TaskView {task: t}
-
-        # outer cell
-        td {
+        ChannelTasksView {
           key: date
-          style:
-            padding: 0
-        }, list
+          tasks: channel.tasksIndexByDay[date]
+        }
 
       # per worker
       tr {key: channel.id},
         # float worker name
-        th {},
-          div {
-            style:
-              'min-height': '100px'
-          }, div {
-              style:
-                position: 'absolute'
-                backgroundColor: 'white'
-                border: 'gray 1px solid'
-                padding: '10px'
-            }, channel.name
+        th {}, ChannelNameView {name: channel.name}
         # task nested cells
         cells
 

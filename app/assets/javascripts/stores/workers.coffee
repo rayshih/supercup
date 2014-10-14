@@ -32,6 +32,17 @@ module.exports = Reflux.createStore
       @data = @parse data
       @trigger @data
 
+  onUpdate: (worker) ->
+    $.ajax(
+      method: 'PUT'
+      dataType: 'json'
+      url: "/api/workers/#{worker.id}"
+      data:
+        worker: worker.data
+    ).done (worker) =>
+      @reorder()
+      @trigger @data
+
   onCreate: (worker) ->
     $.ajax(
       method: 'POST'
