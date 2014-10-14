@@ -1,7 +1,7 @@
 _ = require 'lodash'
 Reflux = require 'reflux'
 {div, h1, thead, tbody, tr, th, td} = React.DOM
-{Table} = require 'react-bootstrap'
+{Table, Label} = require 'react-bootstrap'
 TaskAction = require '../actions/tasks'
 taskStore = require '../stores/tasks'
 WorkerAction = require '../actions/workers'
@@ -18,6 +18,21 @@ moment = require 'moment'
 # TODO 3: input all data (3 hours
 # TODO 4: still need a output format for excel (optional
 
+TaskView = React.createClass
+  displayName: 'TaskView'
+  render: ->
+    t = @props.task
+    tdStyle = wordWrap: 'break-word'
+
+    milestone = t.getMilestone()
+    milestoneLabel = if milestone then Label {bsStyle: 'primary'}, "M#{milestone}"
+
+    tr {key: t.id},
+      td {style: tdStyle},
+        milestoneLabel
+        ' '
+        t.getName()
+
 Assign = React.createClass
   displayName: 'Assign'
   mixins: [Reflux.ListenerMixin]
@@ -27,7 +42,7 @@ Assign = React.createClass
     workers : null
 
   componentDidMount: ->
-    # refactor this to another store
+    # TODO refactor this to another store
     @listenTo taskStore, @onTaskStoreChange
     @listenTo workerStore, @onWorkerStoreChange
     @listenTo leaveStore, @onLeaveStoreChange
@@ -70,7 +85,7 @@ Assign = React.createClass
     assign = @assign()
     channels = assign.channels
 
-    numDate = 40
+    numDate = 70
     workers = @state.workers
 
     # date display
@@ -92,13 +107,7 @@ Assign = React.createClass
             margin: 0
         },
           tbody {},
-            channel.tasksIndexByDay[date]?.map((t) ->
-              tr {key: t.id},
-                td {
-                  style:
-                    'word-wrap': 'break-word'
-                }, t.getName()
-            )
+            channel.tasksIndexByDay[date]?.map (t) -> TaskView {task: t}
 
         # outer cell
         td {
