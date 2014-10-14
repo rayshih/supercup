@@ -86,6 +86,14 @@ class Channel
       @currentDay = @skipWeekend @currentDay
       @recordRemainSlot()
       @currentDayQuota = 8
+      @currentDayQuota = @dealWithLeaves @currentDay, @currentDayQuota
+
+      # TODO refactor this
+      while @currentDayQuota == 0
+        @currentDay += 1
+        @currentDay = @skipWeekend @currentDay
+        @currentDayQuota = 8
+        @currentDayQuota = @dealWithLeaves @currentDay, @currentDayQuota
 
     beginDay = @currentDay
     while h > 0
@@ -96,6 +104,7 @@ class Channel
       @tasksIndexByDay[@currentDay] or= []
       @tasksIndexByDay[@currentDay].push task
 
+      # TODO refactor this
       while @currentDayQuota == 0
         @currentDay += 1
         @currentDay = @skipWeekend @currentDay
