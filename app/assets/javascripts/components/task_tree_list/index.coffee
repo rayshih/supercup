@@ -5,15 +5,31 @@ taskStore = require '../../stores/tasks'
 TaskAction = require '../../actions/tasks'
 {EnterToInputText} = require '../utils'
 FilteredList = require './filtered_list'
-Filter = require './filter'
-Tree = require './tree'
+FilterView = require './filter'
+TreeView = require './tree'
 
 class Node
-  constructor: (@task) ->
-    @children = []
+  constructor: (@task, @children=[]) ->
 
-  filter: (str) ->
-    # TODO
+# TODO test it
+class Filter
+  @filter: (task, str) ->
+    str = str.toLowerCase()
+    task.getName().toLowerCase().indexOf(str) isnt -1
+
+class Tree
+  @filteredTree: (node, str) ->
+    return node unless str
+
+    # TODO Implement Filter
+    return node if Filter.filter node.task, str
+
+    children = _(node.children).map((n) ->
+      Tree.filteredTree n, str
+    ).filter((n) -> n isnt null).value()
+
+    return null unless children.length
+    new Node node.task, children
 
 # TODO refactor it to logic layer
 sortNodes = (nodes) ->
@@ -76,7 +92,7 @@ TaskTreeList = React.createClass
       trees: toTrees(data)
 
   onFilterChange: (str) ->
-    @setState filter: str
+    @setState treeFilterStr: str
 
   onInputChange: (text = '') ->
     filterString = if text.length > 0 then text.toLowerCase() else null
@@ -90,16 +106,20 @@ TaskTreeList = React.createClass
     data = @state.data
     filterString = @state.filterString
     taskNameList = _.map data, (task) -> task.getName()
+    trees = _(@state.trees).map((node) =>
+      Tree.filteredTree node, @state.treeFilterStr
+    ).filter((node) -> node isnt null)
 
-    trees = @state.trees.map (tree) ->
-      Tree {
+    treeViewList = trees.map (tree) =>
+      TreeView {
         key: tree.task.id
         node: tree
+        showSubtree: @state.treeFilterStr?.length > 0
       }
 
     div {},
-      Filter {onChange: @onFilterChange}
-      trees
+      FilterView {onChange: @onFilterChange}
+      treeViewList
       div {
         style:
           marginTop: '10px'
