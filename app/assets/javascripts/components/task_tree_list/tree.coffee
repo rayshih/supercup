@@ -100,10 +100,12 @@ Tree = React.createClass
     title = node.task.getName()
     children = node.children
 
+    hasChildren = children.length > 0
+
     div {className: 'tree'},
       TreeTitle {
         task: node.task
-        hasChildren: children
+        hasChildren: hasChildren
         showSubtree: @state.showSubtree
         onToggleButtonClick: @toggle
         onDeleteButtonClick: @handleDeleteButtonClick
@@ -111,7 +113,7 @@ Tree = React.createClass
         onDragOver: @allowDrop
         onDrop: @handleDropOnTask
       }
-      if children and @state.showSubtree
+      if hasChildren and @state.showSubtree
         Subtree {
           onDragOver: @allowDrop
           onDropToIndent: @handleDropOnOther

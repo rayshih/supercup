@@ -5,8 +5,17 @@ taskStore = require '../../stores/tasks'
 TaskAction = require '../../actions/tasks'
 {EnterToInputText} = require '../utils'
 FilteredList = require './filtered_list'
+Filter = require './filter'
 Tree = require './tree'
 
+class Node
+  constructor: (@task) ->
+    @children = []
+
+  filter: (str) ->
+    # TODO
+
+# TODO refactor it to logic layer
 sortNodes = (nodes) ->
   nodes.forEach (node) ->
     children = node.children
@@ -31,10 +40,7 @@ sortNodes = (nodes) ->
 toTrees = (list) ->
   hash = {}
   list.forEach (task) ->
-    hash[task.id] = {
-      task: task
-      children: null
-    }
+    hash[task.id] = new Node task
 
   roots = []
 
@@ -43,7 +49,6 @@ toTrees = (list) ->
     parentId = task.getParentId()
     if parentId
       parentNode = hash[parentId]
-      parentNode.children or= []
       parentNode.children.push node
     else
       roots.push node
@@ -59,6 +64,7 @@ TaskTreeList = React.createClass
   getInitialState: ->
     data: []
     trees: []
+    filter: null
 
   componentDidMount: ->
     @listenTo taskStore, @onStoreChange
@@ -68,6 +74,9 @@ TaskTreeList = React.createClass
     @setState
       data: data
       trees: toTrees(data)
+
+  onFilterChange: (str) ->
+    @setState filter: str
 
   onInputChange: (text = '') ->
     filterString = if text.length > 0 then text.toLowerCase() else null
@@ -83,9 +92,13 @@ TaskTreeList = React.createClass
     taskNameList = _.map data, (task) -> task.getName()
 
     trees = @state.trees.map (tree) ->
-      Tree {key: tree.task.id, node: tree}
+      Tree {
+        key: tree.task.id
+        node: tree
+      }
 
     div {},
+      Filter {onChange: @onFilterChange}
       trees
       div {
         style:
