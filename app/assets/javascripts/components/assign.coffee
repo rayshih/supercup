@@ -31,7 +31,9 @@ TaskView = React.createClass
       td {style: tdStyle},
         milestoneLabel
         ' '
-        t.getName()
+        Label {}, "##{t.id}"
+        ' '
+        "#{t.getName()}"
 
 ChannelNameView = React.createClass
   displayName: 'ChannelNameView'
@@ -99,7 +101,7 @@ Assign = React.createClass
   assign: ->
     tasks = @state.tasks
     workers = @state.workers
-    autoAssign = new AutoAssign moment('2014-10-06')
+    autoAssign = new AutoAssign moment('2014-10-27')
     # autoAssign = new AutoAssign moment()
     return autoAssign if not workers or workers.length == 0 or not tasks
 

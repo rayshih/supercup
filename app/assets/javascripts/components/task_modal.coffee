@@ -119,11 +119,12 @@ TaskModal = React.createClass
   render: ->
     task = @props.task
 
-    dependencyList = task.getDependencies().map (depId) ->
+    dependencyList = task.getDependencies().map((depId) ->
       t = taskStore.get depId
+    ).filter((t) -> t).map (t) ->
 
       div {
-        key: depId
+        key: t.id
         className: 'title-bar'
       },
         TaskListItem {task: t}
