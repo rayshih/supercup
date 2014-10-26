@@ -65,8 +65,7 @@ class Channel
           quota = 8
           quota = @dealWithLeaves currentDay, quota
 
-      end = if quota == 8 then currentDay - 1 else currentDay
-      endDay = _.max [end, s.endDay]
+      endDay = s.endDay
 
       @assignments.splice s.after, 0, {task, beginDay, endDay}
       if currentDay < endDay or (currentDay == endDay and quota > 0)
@@ -74,7 +73,7 @@ class Channel
           after: s.after + 1
           startDay: currentDay
           startDayQuota: quota
-          endDay: s.endDay
+          endDay: endDay
         }
 
     @remainSlots = slots
