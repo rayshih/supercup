@@ -72,7 +72,10 @@ Subtree = React.createClass
 Tree = React.createClass
   displayName: 'Tree'
   getInitialState: ->
-    showSubtree: false
+    showSubtree: @props.showSubtree
+
+  componentWillReceiveProps: (nextProps) ->
+    @setState showSubtree: nextProps.showSubtree
 
   toggle: ->
     @setState showSubtree: !@state.showSubtree
@@ -105,24 +108,22 @@ Tree = React.createClass
     children = node.children
     hasChildren = children.length > 0
 
-    shouldShowSubTree = @props.showSubtree or @state.showSubtree
-
     div {className: 'tree'},
       TreeTitle {
         task: node.task
         hasChildren: hasChildren
-        showSubtree: shouldShowSubTree
+        showSubtree: @state.showSubtree
         onToggleButtonClick: @toggle
         onDeleteButtonClick: @handleDeleteButtonClick
         onDragStart: @handleDragStart
         onDragOver: @allowDrop
         onDrop: @handleDropOnTask
       }
-      if hasChildren and shouldShowSubTree
+      if hasChildren and @state.showSubtree
         Subtree {
           onDragOver: @allowDrop
           onDropToIndent: @handleDropOnOther
-          showSubtree: shouldShowSubTree
+          showSubtree: @props.showSubtree
         }, children
 
 module.exports = Tree
