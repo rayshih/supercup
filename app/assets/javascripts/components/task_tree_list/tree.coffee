@@ -75,7 +75,8 @@ Tree = React.createClass
     showSubtree: @props.showSubtree
 
   componentWillReceiveProps: (nextProps) ->
-    @setState showSubtree: nextProps.showSubtree
+    if @props.showSubtree != nextProps.showSubtree
+      @setState showSubtree: nextProps.showSubtree
 
   toggle: ->
     @setState showSubtree: !@state.showSubtree
