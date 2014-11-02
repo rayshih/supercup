@@ -70,10 +70,10 @@ class Channel
       beginDay = s.startDay
       endDay = if quota is 8 then currentDay - 1 else currentDay
       @assignments.splice s.after, 0, {task, beginDay, endDay}
-      if currentDay < endDay or (currentDay == s.endDay and quota > 0)
+      if endDay < s.endDay or (endDay == s.endDay and quota > 0)
         slots.push {
           after: s.after + 1
-          startDay: currentDay
+          startDay: endDay
           startDayQuota: quota
           endDay: s.endDay
         }
