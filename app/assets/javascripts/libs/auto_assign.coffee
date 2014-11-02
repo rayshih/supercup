@@ -34,6 +34,8 @@ class Channel
   addLeave: (leave) ->
     @leaves.push leave
 
+  # TODO rename it: beginDay is the minimum date to start
+  # not the actual date to start
   assignTask: (task, beginDay) ->
     h = task.getDuration()
     h = 1 if not h
@@ -42,16 +44,16 @@ class Channel
     h = @assignToEnd task, h, beginDay
     @counter++
 
-  assignToRemainSlot: (task, h, beginDay) ->
+  assignToRemainSlot: (task, h, afterDay) ->
     slots = []
     @remainSlots.forEach (s) =>
-      unless s.endDay >= beginDay
+      unless s.endDay >= afterDay and h > 0
         slots.push s
         return
 
       currentDay = s.startDay
       quota = s.startDayQuota
-      while h > 0 and quota > 0
+      while h > 0 and quota > 0 and currentDay <= s.endDay
         x = _.min [h, quota]
 
         h -= x
@@ -65,15 +67,15 @@ class Channel
           quota = 8
           quota = @dealWithLeaves currentDay, quota
 
-      endDay = s.endDay
-
+      beginDay = s.startDay
+      endDay = if quota is 8 then currentDay - 1 else currentDay
       @assignments.splice s.after, 0, {task, beginDay, endDay}
-      if currentDay < endDay or (currentDay == endDay and quota > 0)
+      if currentDay < endDay or (currentDay == s.endDay and quota > 0)
         slots.push {
           after: s.after + 1
           startDay: currentDay
           startDayQuota: quota
-          endDay: endDay
+          endDay: s.endDay
         }
 
     @remainSlots = slots

@@ -101,8 +101,8 @@ Assign = React.createClass
   assign: ->
     tasks = @state.tasks
     workers = @state.workers
-    autoAssign = new AutoAssign moment('2014-10-27')
-    # autoAssign = new AutoAssign moment()
+    autoAssign = new AutoAssign moment('2014-11-03')
+    # autoAssign = new AutoAssign moment() # from now
     return autoAssign if not workers or workers.length == 0 or not tasks
 
     channels = (for w in workers
