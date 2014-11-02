@@ -23,7 +23,6 @@ class Channel
     @currentDayQuota = 8 # hours by day
     @lastEndDay = 0
     @lastEndDayQuota = 8
-    @counter = 0
 
     @assignments = []
     @remainSlots = []
@@ -42,7 +41,6 @@ class Channel
 
     h = @assignToRemainSlot task, h, beginDay
     h = @assignToEnd task, h, beginDay
-    @counter++
 
   assignToRemainSlot: (task, h, afterDay) ->
     slots = []
@@ -51,8 +49,21 @@ class Channel
         slots.push s
         return
 
-      currentDay = s.startDay
-      quota = s.startDayQuota
+      if s.startDay >= afterDay
+        currentDay = s.startDay
+        quota = s.startDayQuota
+      else
+        currentDay = afterDay
+        currentDay = @skipWeekend currentDay
+        quota = 8
+
+        slots.push {
+          after: s.after
+          startDay: s.startDay
+          startDayQuota: s.startDayQuota
+          endDay: currentDay - 1
+        }
+
       while h > 0 and quota > 0 and currentDay <= s.endDay
         x = _.min [h, quota]
 
@@ -70,10 +81,10 @@ class Channel
       beginDay = s.startDay
       endDay = if quota is 8 then currentDay - 1 else currentDay
       @assignments.splice s.after, 0, {task, beginDay, endDay}
-      if endDay < s.endDay or (endDay == s.endDay and quota > 0)
+      if currentDay < s.endDay or (currentDay == s.endDay and quota > 0)
         slots.push {
           after: s.after + 1
-          startDay: endDay
+          startDay: currentDay
           startDayQuota: quota
           endDay: s.endDay
         }
@@ -82,10 +93,12 @@ class Channel
     h
 
   assignToEnd: (task, h, beginDay) ->
+    return 0 unless h > 0
+
     if beginDay and beginDay > @currentDay
       @currentDay = beginDay
       @currentDay = @skipWeekend @currentDay
-      @recordRemainSlot()
+      @recordRemainSlot @assignments.length # since not assign yet
       @currentDayQuota = 8
       @currentDayQuota = @dealWithLeaves @currentDay, @currentDayQuota
 
@@ -118,18 +131,19 @@ class Channel
     @assignments.push {task, beginDay, endDay}
     h
 
-  recordRemainSlot: ->
+  recordRemainSlot: (after) ->
     @remainSlots.push {
-      after: @counter - 1
+      after: after
       startDay: @lastEndDay
       startDayQuota: @lastEndDayQuota
       endDay: @currentDay - 1
     }
 
   validDayToStart: (task, after=0) ->
-    i = @counter - 1
+    assign = _.sortBy @assignments, 'endDay'
+    i = assign.length - 1
     while i >= 0
-      a = @assignments[i]
+      a = assign[i]
       t = a.task
       if a.endDay >= after
         if task.getDependencies().indexOf(t.id) != -1 or t.getParentId() == task.id
