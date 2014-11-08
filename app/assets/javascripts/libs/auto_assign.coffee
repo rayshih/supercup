@@ -127,15 +127,17 @@ class Channel
 
     endDay = if @currentDayQuota == 8 then @currentDay - 1 else @currentDay
     @lastEndDay = endDay
-    @lastEndDayQuota = @currentDayQuota
+    @lastEndDayQuota = if @currentDayQuota == 8 then 0 else @currentDayQuota
     @assignments.push {task, beginDay, endDay}
     h
 
   recordRemainSlot: (after) ->
+    startDay = if @lastEndDayQuota == 0 then @lastEndDay + 1 else @lastEndDay
+    startDayQuota = if @lastEndDayQuota == 0 then 8 else @lastEndDayQuota
     @remainSlots.push {
       after: after
-      startDay: @lastEndDay
-      startDayQuota: @lastEndDayQuota
+      startDay: startDay
+      startDayQuota: startDayQuota
       endDay: @currentDay - 1
     }
 
