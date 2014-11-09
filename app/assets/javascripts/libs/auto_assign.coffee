@@ -26,17 +26,19 @@ class Slot
   hasTimeAfter: (day) ->
     @endDay >= day
 
+  clone: ->
+    new Slot @
+
 class Channel
   constructor: (@id, @name) ->
     @dailyQuota = 8 # hours by day
 
-    @currentDay = 0
-    @currentDayQuota = @dailyQuota
-    @lastEndDay = 0
-    @lastEndDayQuota = @dailyQuota
-
+    @slots = [new Slot {
+      startDay: 0
+      startDayQuota: @dailyQuota
+      endDay: Infinity
+    }]
     @assignments = []
-    @remainSlots = []
     @tasksIndexByDay = []
 
     @leaves = []
@@ -44,18 +46,31 @@ class Channel
   addLeave: (leave) ->
     @leaves.push leave
 
+  nonBlockingDayToStart: (task, after=0) ->
+    assign = _.sortBy @assignments, 'endDay'
+
+    i = assign.length - 1
+    while i >= 0
+      a = assign[i]
+      t = a.task
+      if a.endDay >= after
+        if task.getDependencies().indexOf(t.id) != -1 or t.getParentId() == task.id
+          return a.endDay + 1
+      i--
+
+    after
+
   assignTask: (task, afterDay) ->
     h = task.getDuration()
     h = 1 if not h
 
-    h = @assignToRemainSlot task, h, afterDay
-    h = @assignToEnd task, h, afterDay
+    @assignToSlots task, h, afterDay
 
-  assignToRemainSlot: (task, h, afterDay) ->
+  assignToSlots: (task, h, afterDay) ->
     return 0 unless h > 0
 
     slots = []
-    @remainSlots.forEach (s) =>
+    @slots.forEach (s) =>
       unless s.hasTimeAfter afterDay
         slots.push s
         return
@@ -66,8 +81,9 @@ class Channel
       else
         [currentDay, quota] = @validDayAndQuota afterDay, @dailyQuota
 
-        s.endDay = currentDay - 1
-        slots.push s
+        slot = s.clone()
+        slot.endDay = currentDay - 1
+        slots.push slot
 
       beginDay = s.startDay
       while h > 0 and currentDay <= s.endDay
@@ -91,51 +107,12 @@ class Channel
 
         slots.push slot
 
-    @remainSlots = slots
-    h
-
-  assignToEnd: (task, h, beginDay) ->
-    return 0 unless h > 0
-
-    if beginDay > @currentDay
-      [@currentDay, @currentDayQuota] = @validDayAndQuota beginDay, @dailyQuota
-      @recordRemainSlot()
-
-    beginDay = @currentDay
-    while h > 0
-      # update numbers
-      x = _.min [h, @currentDayQuota]
-      h -= x
-      @currentDayQuota -= x
-
-      @assignTaskToDay task, @currentDay
-      endDay = @currentDay
-      endDayQuota = @currentDayQuota
-
-      [@currentDay, @currentDayQuota] = @validDayAndQuota @currentDay,
-                                                          @currentDayQuota
-
-    @assignments.push {task, beginDay, endDay}
-
-    @lastEndDay = endDay
-    @lastEndDayQuota = endDayQuota
-
+    @slots = slots
     h
 
   assignTaskToDay: (task, day) ->
     @tasksIndexByDay[day] or= []
     @tasksIndexByDay[day].push task
-
-  # base on lastEndDay and currentDay
-  recordRemainSlot: () ->
-    [startDay, startDayQuota] = @validDayAndQuota @lastEndDay, @lastEndDayQuota
-
-    slot = new Slot
-      startDay: startDay
-      startDayQuota: startDayQuota
-      endDay: @currentDay - 1
-
-    @remainSlots.push slot
 
   validDayAndQuota: (day, quota) ->
     if @isWeekend day
@@ -147,20 +124,6 @@ class Channel
       quota = @quotaAfterCheckLeave day, @dailyQuota
 
     [day, quota]
-
-  nonBlockingDayToStart: (task, after=0) ->
-    assign = _.sortBy @assignments, 'endDay'
-
-    i = assign.length - 1
-    while i >= 0
-      a = assign[i]
-      t = a.task
-      if a.endDay >= after
-        if task.getDependencies().indexOf(t.id) != -1 or t.getParentId() == task.id
-          return a.endDay + 1
-      i--
-
-    after
 
   skipWeekend: (day) ->
     day += 1 while @isWeekend day
