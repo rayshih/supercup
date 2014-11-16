@@ -67,6 +67,7 @@ WorkerList = React.createClass
   mixins: [Reflux.ListenerMixin]
 
   getInitialState: ->
+    # TODO: descriptive naming
     data : []
 
   componentDidMount: ->
@@ -74,6 +75,7 @@ WorkerList = React.createClass
     WorkerAction.index()
 
   onStoreChange: (data) ->
+    # Leaky: data passed-in by store should be sorted
     @setState data: _.sortBy(data, (w) ->
       w.getOrder()
     )

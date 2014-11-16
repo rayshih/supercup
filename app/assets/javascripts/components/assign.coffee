@@ -99,6 +99,7 @@ Assign = React.createClass
   onLeaveStoreChange: (leaves) -> @setState {leaves} # for trigger render TODO refactor
 
   assign: ->
+    # TODO: extract this out
     tasks = @state.tasks
     workers = @state.workers
     autoAssign = new AutoAssign moment('2014-11-10')
