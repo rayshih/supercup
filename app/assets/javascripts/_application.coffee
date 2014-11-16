@@ -1,3 +1,4 @@
+# TODO: Use expose-loader
 window.React = require 'react'
 
 {Routes, Route, Link, DefaultRoute} = require 'react-router'

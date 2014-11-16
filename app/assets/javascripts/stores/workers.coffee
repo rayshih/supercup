@@ -1,5 +1,6 @@
 _ = require 'lodash'
 Reflux = require 'reflux'
+# TODO: rename action to more description name like workersActions
 action = require '../actions/workers'
 Worker = require '../models/worker'
 

@@ -1,5 +1,6 @@
 _ = require 'lodash'
 Reflux = require 'reflux'
+# TODO: rename action to more description name like leavesActions
 action = require '../actions/leaves'
 Leave = require '../models/leave'
 
